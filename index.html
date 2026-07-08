@@ -1,0 +1,3327 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Astra International - Import Process Monitoring System</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- React & ReactDOM CDN -->
+    <script
+      src="https://unpkg.com/react@18/umd/react.development.js"
+      crossorigin
+    ></script>
+    <script
+      src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"
+      crossorigin
+    ></script>
+
+    <!-- Babel Standalone for JSX Parsing -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- FontAwesome Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <!-- Google Fonts (Inter & Fira Code) -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+      }
+      .font-mono {
+        font-family: "Fira Code", monospace;
+      }
+      /* Custom Scrollbar for Light Theme */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #f1f5f9;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
+    </style>
+  </head>
+  <body class="bg-slate-50 text-slate-800 min-h-screen">
+    <div id="root"></div>
+
+    <!-- React JSX Script Block -->
+    <script type="text/babel">
+      const { useState, useEffect, useRef } = React;
+
+      const initialShipments = [
+        {
+          id: "IMP-2026-801",
+          poNumber: "PO-ASTRA-7789",
+          commodity: "Chassis & CKD Engine Parts - Toyota Fortuner",
+          origin: "Japan (Toyota Motomachi Plant)",
+          destination: "Astra Sunter Assembly Plant, JKT",
+          status: "Customs Assessment (Yellow Lane)",
+          lane: "Yellow", // Green, Yellow, Red
+          estimatedTime: "2 Days",
+          lastUpdated: "2026-07-06 14:10",
+          currentStep: 3, // 0: Pre-Import Docs, 1: PIB Draft, 2: Billing & Payment, 3: Customs Gate, 4: Released
+          invoiceValue: 345000, // in USD
+          dutyRate: 10, // % (General CKD tariff)
+          ppnRate: 11, // %
+          pphRate: 2.5, // % (API-U holder)
+          sdppiCert: "SNI-8708-2025/ME",
+          lartasStatus: "Requires Laporan Surveyor & SNI Match",
+          documents: [
+            {
+              name: "Toyota_Invoice_Inv-7789.pdf",
+              type: "Invoice",
+              status: "Approved",
+              size: "2.1 MB",
+              uploader: "Logistics Team",
+            },
+            {
+              name: "Packing_List_Fortuner_Box12.pdf",
+              type: "Packing List",
+              status: "Approved",
+              size: "1.4 MB",
+              uploader: "Logistics Team",
+            },
+            {
+              name: "Bill_of_Lading_JP_JKT_801.pdf",
+              type: "BL/AWB",
+              status: "Approved",
+              size: "3.2 MB",
+              uploader: "Custom Broker",
+            },
+            {
+              name: "Sertifikat_SNI_Toyota_Parts.pdf",
+              type: "Form E/D / SNI / LS",
+              status: "Pending Verification",
+              size: "1.8 MB",
+              uploader: "Compliance Team",
+            },
+          ],
+          pibData: {
+            hsCode: "8708.29.90",
+            taxCalculated: 624450000, // Rp
+            status: "NPD Issued - Awaiting SNI Validation",
+          },
+          npdNotes:
+            "Menunggu validasi dokumen Laporan Surveyor (LS) dan Sertifikat SNI di portal INSW (Yellow Lane Action Required)",
+        },
+        {
+          id: "IMP-2026-802",
+          poNumber: "PO-ASTRA-9011",
+          commodity: "Automotive Engine Control Units (ECU) Assembly",
+          origin: "Thailand (Toyota Samrong Plant)",
+          destination: "Astra Karawang Plant, West Java",
+          status: "Released & Out of Gate (SPPB)",
+          lane: "Green",
+          estimatedTime: "Completed",
+          lastUpdated: "2026-07-05 09:30",
+          currentStep: 4,
+          invoiceValue: 185000,
+          dutyRate: 0, // ASEAN Trade in Goods Agreement (ATIGA Form D 0%)
+          ppnRate: 11,
+          pphRate: 2.5,
+          sdppiCert: "Form-D-TH-ID-229101",
+          lartasStatus: "ATIGA Form D Applied (Duty 0%)",
+          documents: [
+            {
+              name: "Invoice_ECU_TH_9011.pdf",
+              type: "Invoice",
+              status: "Approved",
+              size: "950 KB",
+              uploader: "Logistics Team",
+            },
+            {
+              name: "Packing_List_ECU_9011.pdf",
+              type: "Packing List",
+              status: "Approved",
+              size: "1.1 MB",
+              uploader: "Logistics Team",
+            },
+            {
+              name: "Form_D_Certificate_TH_ID.pdf",
+              type: "Form E/D / SNI / LS",
+              status: "Approved",
+              size: "2.4 MB",
+              uploader: "Compliance Team",
+            },
+            {
+              name: "BL_ECU_Sea_Freight.pdf",
+              type: "BL/AWB",
+              status: "Approved",
+              size: "1.9 MB",
+              uploader: "Custom Broker",
+            },
+          ],
+          pibData: {
+            hsCode: "8708.99.80",
+            taxCalculated: 367225000,
+            status: "SPPB Issued - Gate Out Completed",
+          },
+        },
+        {
+          id: "IMP-2026-803",
+          poNumber: "PO-UT-3410",
+          commodity: "Komatsu Heavy Excavator Hydraulic Pump Units",
+          origin: "Japan (Komatsu Awazu Plant)",
+          destination: "United Tractors Hub (Cakung)",
+          status: "Physical Inspection Pending (SPJM)",
+          lane: "Red",
+          estimatedTime: "4 Days",
+          lastUpdated: "2026-07-07 10:45",
+          currentStep: 3,
+          invoiceValue: 520000,
+          dutyRate: 5,
+          ppnRate: 11,
+          pphRate: 2.5,
+          sdppiCert: "LS-UT-KMT-2026",
+          lartasStatus: "High-Value Industrial Machinery",
+          documents: [
+            {
+              name: "Komatsu_Invoice_4401.pdf",
+              type: "Invoice",
+              status: "Approved",
+              size: "3.4 MB",
+              uploader: "Logistics Team",
+            },
+            {
+              name: "Komatsu_Packing_List_4401.pdf",
+              type: "Packing List",
+              status: "Approved",
+              size: "4.1 MB",
+              uploader: "Logistics Team",
+            },
+            {
+              name: "AWB_Komatsu_Heavy_Air.pdf",
+              type: "BL/AWB",
+              status: "Approved",
+              size: "1.8 MB",
+              uploader: "Custom Broker",
+            },
+          ],
+          pibData: {
+            hsCode: "8431.49.90",
+            taxCalculated: 981500000,
+            status: "SPJM Issued (Red Lane Physical Examination)",
+          },
+          spjmNotes:
+            "Jadwal Pemeriksaan Fisik: 2026-07-08 Jam 09:00 WIB di Lapangan TPS JICT II, Pelabuhan Tanjung Priok.",
+        },
+      ];
+
+      const stepsList = [
+        {
+          label: "Pre-Import Docs",
+          desc: "Upload & Verify Invoice, PL, BL, SNI / LS",
+        },
+        {
+          label: "PIB Draft & HS",
+          desc: "HS Code Assignment & Tax Calculation Check",
+        },
+        {
+          label: "Billing & Payment",
+          desc: "PNBP Settlement & Tax Duty Cleared via MPN",
+        },
+        {
+          label: "Customs Gate",
+          desc: "Risk Management: Green, Yellow, or Red Lane Assignment",
+        },
+        {
+          label: "Cargo Released",
+          desc: "SPPB Generation & Final Logistical Delivery",
+        },
+      ];
+
+      const hsDirectory = [
+        {
+          hsCode: "8708.29.90",
+          description: "Toyota Fortuner Body & CKD Assemblies",
+          duty: 10,
+          note: "SNI / SPI Lartas Required",
+        },
+        {
+          hsCode: "8708.99.80",
+          description: "Engine Control Units (ECU) Modules",
+          duty: 0,
+          note: "Form D / ATIGA Eligible",
+        },
+        {
+          hsCode: "8431.49.90",
+          description: "Excavator Hydraulic Parts & Valves",
+          duty: 5,
+          note: "Laporan Surveyor (LS)",
+        },
+        {
+          hsCode: "8708.40.92",
+          description: "Automatic Transmission Gearbox assemblies",
+          duty: 10,
+          note: "SNI / Post Border Audit",
+        },
+      ];
+
+      function App() {
+        const [isLoggedIn, setIsLoggedIn] = useState(false);
+        const [loginUsername, setLoginUsername] = useState("taufik.hidayat");
+        const [loginPassword, setLoginPassword] = useState("••••••••••••");
+        const [rememberMe, setRememberMe] = useState(true);
+
+        const [shipments, setShipments] = useState(initialShipments);
+        const [selectedShipment, setSelectedShipment] = useState(
+          initialShipments[0],
+        );
+        const [activeTab, setActiveTab] = useState("Dashboard");
+        const [activeRole, setActiveRole] = useState("Supply Team");
+
+        const [terminalLogs, setTerminalLogs] = useState([
+          "[SYSTEM] Initiating Secure SSL connection to INSW Bea Cukai Gateways...",
+          "[CEISA] Connection handshake: SUCCESS (Port 443 APIv2.6)",
+          "[CEISA] Synchronization with LARTAS-Astra databases: ACTIVE.",
+        ]);
+        const [terminalInput, setTerminalInput] = useState("");
+        const [hsSearchQuery, setHsSearchQuery] = useState("");
+        const [customDutyOverride, setCustomDutyOverride] = useState("");
+
+        const [calcInvoice, setCalcInvoice] = useState(
+          selectedShipment.invoiceValue,
+        );
+        const [calcDuty, setCalcDuty] = useState(selectedShipment.dutyRate);
+        const [exchangeRate, setExchangeRate] = useState(16400);
+
+        // Modal states
+        const [isModalOpen, setIsModalOpen] = useState(false);
+        const [newPo, setNewPo] = useState("");
+        const [newCommodity, setNewCommodity] = useState("");
+        const [newOrigin, setNewOrigin] = useState(
+          "Japan (Toyota Motomachi Plant)",
+        );
+        const [newLane, setNewLane] = useState("Green");
+        const [newVal, setNewVal] = useState("120000");
+
+        // Notifications state
+        const [showNotifications, setShowNotifications] = useState(false);
+        const [notifications, setNotifications] = useState([
+          {
+            id: 1,
+            text: "Jadwal SPJM (Jalur Merah) IMP-2026-803 besok jam 09:00 WIB",
+            unread: true,
+          },
+          {
+            id: 2,
+            text: "NPD Terbit untuk IMP-2026-801: Sertifikat SNI belum tervalidasi",
+            unread: true,
+          },
+          {
+            id: 3,
+            text: "Logistics Clearance auto-approved untuk IMP-2026-802",
+            unread: false,
+          },
+        ]);
+
+        // PDF / Print declaration simulator
+        const [showPrintModal, setShowPrintModal] = useState(false);
+
+        // Shipments Tab Table Filters & Search
+        const [shipmentsFilter, setShipmentsFilter] = useState("All");
+        const [shipmentsSearch, setShipmentsSearch] = useState("");
+
+        // Scheduling state for red lane SPJM
+        const [customInspectionDate, setCustomInspectionDate] =
+          useState("2026-07-08");
+        const [customInspectionTime, setCustomInspectionTime] =
+          useState("09:00");
+
+        const [chatMessages, setChatMessages] = useState([
+          {
+            role: "assistant",
+            text: "Halo! Saya adalah Asisten AI Bea Cukai & Kepatuhan Lartas PT Astra International Tbk. Saya dapat membantu memeriksa tarif HS Code suku cadang otomotif/alat berat, mediasi dokumen Laporan Surveyor (LS), Surat Persetujuan Impor (SPI), dan panduan Behandling Jalur Merah.",
+          },
+        ]);
+        const [chatInput, setChatInput] = useState("");
+        const [isAiLoading, setIsAiLoading] = useState(false);
+        const [isAuditLoading, setIsAuditLoading] = useState(false);
+        const [complianceReport, setComplianceReport] = useState(null);
+
+        const [isExecAiLoading, setIsExecAiLoading] = useState(false);
+        const [executiveDigest, setExecutiveDigest] = useState(null);
+
+        // Ref untuk scroll kontainer log terminal tanpa mengganggu halaman utama
+        const terminalContainerRef = useRef(null);
+
+        useEffect(() => {
+          setCalcInvoice(selectedShipment.invoiceValue);
+          setCalcDuty(selectedShipment.dutyRate);
+        }, [selectedShipment]);
+
+        // Memperbaiki bug scroll melompat ke bawah halaman:
+        // Mengubah setelan scroll agar hanya berlaku di dalam kontainer terminal log sendiri.
+        useEffect(() => {
+          if (terminalContainerRef.current) {
+            terminalContainerRef.current.scrollTop =
+              terminalContainerRef.current.scrollHeight;
+          }
+        }, [terminalLogs]);
+
+        const addTerminalLog = (message) => {
+          const timestamp = new Date().toLocaleTimeString();
+          setTerminalLogs((prev) => [...prev, `[${timestamp}] ${message}`]);
+        };
+
+        const calculateTaxes = () => {
+          const cifIdr = calcInvoice * exchangeRate;
+          const dutyAmount = cifIdr * (calcDuty / 100);
+          const basisPpnAndPph = cifIdr + dutyAmount;
+          const ppnAmount = basisPpnAndPph * (selectedShipment.ppnRate / 100);
+          const pphAmount = basisPpnAndPph * (selectedShipment.pphRate / 100);
+          const totalTaxes = dutyAmount + ppnAmount + pphAmount;
+
+          return {
+            cifIdr: cifIdr.toLocaleString("id-ID", {
+              style: "currency",
+              currency: "IDR",
+            }),
+            duty: dutyAmount.toLocaleString("id-ID", {
+              style: "currency",
+              currency: "IDR",
+            }),
+            ppn: ppnAmount.toLocaleString("id-ID", {
+              style: "currency",
+              currency: "IDR",
+            }),
+            pph: pphAmount.toLocaleString("id-ID", {
+              style: "currency",
+              currency: "IDR",
+            }),
+            total: totalTaxes.toLocaleString("id-ID", {
+              style: "currency",
+              currency: "IDR",
+            }),
+            totalRaw: totalTaxes,
+          };
+        };
+
+        const currentTaxCalculations = calculateTaxes();
+
+        const handleSelectShipment = (id) => {
+          const found = shipments.find((s) => s.id === id);
+          if (found) {
+            setSelectedShipment(found);
+            addTerminalLog(`Switched focus to shipment record: ${found.id}`);
+            setComplianceReport(null);
+          }
+        };
+
+        const simulateLaneChange = (lane) => {
+          addTerminalLog(
+            `Simulating lane change for ${selectedShipment.id} to [${lane} Lane]`,
+          );
+          const updatedShipments = shipments.map((s) => {
+            if (s.id === selectedShipment.id) {
+              let status = "Customs Assessment (Yellow Lane)";
+              let currentStep = 3;
+              let npdNotes = undefined;
+              let spjmNotes = undefined;
+
+              if (lane === "Green") {
+                status = "Released & Out of Gate (SPPB)";
+                currentStep = 4;
+                addTerminalLog(
+                  `[CEISA] Automated compliance gate passed. SPPB Document signed.`,
+                );
+              } else if (lane === "Yellow") {
+                npdNotes =
+                  "Sertifikat Laporan Surveyor (LS) belum ter-upload sempurna di portal INSW.";
+                addTerminalLog(
+                  `[CEISA-NPD] System flagged incomplete SNI/LS certification file.`,
+                );
+              } else if (lane === "Red") {
+                status = "Physical Inspection Pending (SPJM)";
+                spjmNotes = `Pemeriksaan fisik kargo di pos TPS JICT II, Pelabuhan Tanjung Priok dijadwalkan tanggal ${customInspectionDate} Jam ${customInspectionTime} WIB.`;
+                addTerminalLog(
+                  `[CEISA-SPJM] Red Lane status assigned. Random sampling checklist generated.`,
+                );
+              }
+
+              return {
+                ...s,
+                lane,
+                status,
+                currentStep,
+                npdNotes,
+                spjmNotes,
+                pibData: {
+                  ...s.pibData,
+                  status:
+                    lane === "Green"
+                      ? "SPPB Issued - Gate Out Completed"
+                      : lane === "Yellow"
+                        ? "NPD Issued - Document Hold"
+                        : "SPJM Issued - Red Lane Hold",
+                },
+              };
+            }
+            return s;
+          });
+
+          setShipments(updatedShipments);
+          setSelectedShipment(
+            updatedShipments.find((s) => s.id === selectedShipment.id),
+          );
+        };
+
+        const handleApplyHsCode = (hsObj) => {
+          addTerminalLog(
+            `Custom Broker assigned HS Code [${hsObj.hsCode}] (${hsObj.description}) to ${selectedShipment.id}`,
+          );
+          const updatedShipments = shipments.map((s) => {
+            if (s.id === selectedShipment.id) {
+              const tempInvoice = s.invoiceValue;
+              const tempCifIdr = tempInvoice * exchangeRate;
+              const tempDutyAmount = tempCifIdr * (hsObj.duty / 100);
+              const tempBasis = tempCifIdr + tempDutyAmount;
+              const calculatedTaxVal =
+                tempDutyAmount + tempBasis * 0.11 + tempBasis * 0.025;
+
+              return {
+                ...s,
+                dutyRate: hsObj.duty,
+                lartasStatus: hsObj.note,
+                pibData: {
+                  ...s.pibData,
+                  hsCode: hsObj.hsCode,
+                  taxCalculated: calculatedTaxVal,
+                },
+              };
+            }
+            return s;
+          });
+
+          setShipments(updatedShipments);
+          setSelectedShipment(
+            updatedShipments.find((s) => s.id === selectedShipment.id),
+          );
+          setCalcDuty(hsObj.duty);
+        };
+
+        const generateExecutiveAid = async () => {
+          setIsExecAiLoading(true);
+          addTerminalLog(
+            `Compiling executive strategic import audit briefing...`,
+          );
+
+          try {
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            const systemPrompt = `Act as a world-class trade compliance and financial officer for PT Astra International Tbk. Write an advanced, executive trade strategy summary memo in Indonesian analyzing the current active imports dataset. Detail specific high-value risks, optimization of the ASEAN-China FTA / ATIGA (Form D), and mitigating Tanjung Priok port demurrage charges for Red & Yellow lanes. Provide precise, professional advice.`;
+
+            const userPrompt = `Daftar Kargo Impor Aktif Astra:
+          ${JSON.stringify(
+            shipments.map((s) => ({
+              id: s.id,
+              commodity: s.commodity,
+              lane: s.lane,
+              invoiceUsd: s.invoiceValue,
+              dutyPercent: s.dutyRate,
+              taxesIdr: s.pibData.taxCalculated,
+            })),
+          )}`;
+
+            const response = await fetch(apiUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: userPrompt }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+              }),
+            });
+
+            const result = await response.json();
+            const generatedText =
+              result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+            if (generatedText) {
+              setExecutiveDigest(generatedText);
+              addTerminalLog(
+                "Custom Executive AI Strategic Digest successfully generated via Gemini-3.",
+              );
+            } else {
+              throw new Error("Unexpected model response format.");
+            }
+          } catch (err) {
+            console.warn(
+              "Direct API call failed or timed out. Initiating high-fidelity local fallback engine.",
+            );
+            const localFallbackDigest = `### MEMORANDUM STRATEGIS GLOBAL TRADE & KEPABEANAN
+**Kepada:** Direksi & Senior Management PT Astra International Tbk
+**Dari:** Chief Customs & Global Trade Division
+**Subjek:** Ringkasan Manajemen Risiko Impor & Optimasi Bea Masuk Semester II-2026
+
+**1. Eksposur Kapital Berjalan**
+* Total Nilai Invoice Aktif: $${shipments.reduce((acc, s) => acc + s.invoiceValue, 0).toLocaleString()} USD.
+* Total Estimasi PDRI (Pajak Dalam Rangka Impor) Terkalkulasi: Rp ${shipments.reduce((acc, s) => acc + s.pibData.taxCalculated, 0).toLocaleString("id-ID")}.
+
+**2. Status SLA & Risiko Jalur Penahanan**
+* **Jalur Kuning (${shipments.filter((s) => s.lane === "Yellow").length} Cargo):** Memerlukan percepatan pencocokan database Laporan Surveyor (LS) & SNI di portal INSW Bea Cukai. Potensi demurrage Rp 20.000.000/hari di Tanjung Priok jika melampaui 3 hari penumpukan.
+* **Jalur Merah (${shipments.filter((s) => s.lane === "Red").length} Cargo):** Target audit fisik di TPS JICT II. Diperlukan kehadiran PPJK internal bersertifikat untuk verifikasi serial number mesin.
+
+**3. Rekomendasi Taktis & Optimasi Form D**
+* Optimalkan utilisasi Perjanjian Perdagangan Bebas ASEAN (ATIGA Form D) untuk komponen asal Thailand guna memangkas tarif Bea Masuk menjadi 0%.
+* Standardisasi pra-clearance suku cadang otomotif sebelum kapal sandar (Pre-Clearance PIB) guna menekan Dwelling Time.`;
+
+            setTimeout(() => {
+              setExecutiveDigest(localFallbackDigest);
+              addTerminalLog(
+                "Executive Strategic AI Digest generated and rendered successfully via Local Engine.",
+              );
+              setIsExecAiLoading(false);
+            }, 1200);
+            return;
+          }
+          setIsExecAiLoading(false);
+        };
+
+        const updateDocumentStatus = (docName, newStatus) => {
+          addTerminalLog(
+            `Verifying file integrity: ${docName} -> ${newStatus}`,
+          );
+          const updatedShipments = shipments.map((s) => {
+            if (s.id === selectedShipment.id) {
+              const updatedDocs = s.documents.map((d) => {
+                if (d.name === docName) {
+                  return { ...d, status: newStatus };
+                }
+                return d;
+              });
+              return { ...s, documents: updatedDocs };
+            }
+            return s;
+          });
+
+          setShipments(updatedShipments);
+          setSelectedShipment(
+            updatedShipments.find((s) => s.id === selectedShipment.id),
+          );
+        };
+
+        const handleSimulatedFileUpload = () => {
+          addTerminalLog(
+            "Initiating simulated upload of verification certificates...",
+          );
+          setTimeout(() => {
+            const mockFileName = `ASTRA_LS_INSW_REV_${Math.floor(1000 + Math.random() * 9000)}.pdf`;
+            const newDoc = {
+              name: mockFileName,
+              type: "Form E/D / SNI / LS",
+              status: "Approved",
+              size: "2.4 MB",
+              uploader: "Taufik Hidayat (Senior Logistics)",
+            };
+
+            const updated = shipments.map((s) => {
+              if (s.id === selectedShipment.id) {
+                return {
+                  ...s,
+                  documents: [...s.documents, newDoc],
+                  lartasStatus: "Document Verified by INSW Broker Gateway",
+                };
+              }
+              return s;
+            });
+
+            setShipments(updated);
+            setSelectedShipment(
+              updated.find((s) => s.id === selectedShipment.id),
+            );
+            addTerminalLog(
+              `Document '${mockFileName}' successfully uploaded and parsed by CEISA system.`,
+            );
+
+            // Clear notification
+            setNotifications((prev) => [
+              {
+                id: Date.now(),
+                text: `Dokumen baru '${mockFileName}' berhasil di-unggah untuk ${selectedShipment.id}`,
+                unread: true,
+              },
+              ...prev,
+            ]);
+          }, 800);
+        };
+
+        const handleCreateShipment = (e) => {
+          e.preventDefault();
+          if (!newPo || !newCommodity) return;
+
+          const newId = `IMP-2026-80${shipments.length + 1}`;
+          const newRecord = {
+            id: newId,
+            poNumber: newPo,
+            commodity: newCommodity,
+            origin: newOrigin,
+            destination: "Astra Karawang Plant, West Java",
+            status:
+              newLane === "Green"
+                ? "Released & Out of Gate (SPPB)"
+                : newLane === "Yellow"
+                  ? "Customs Assessment (Yellow Lane)"
+                  : "Physical Inspection Pending (SPJM)",
+            lane: newLane,
+            estimatedTime:
+              newLane === "Green"
+                ? "Completed"
+                : newLane === "Yellow"
+                  ? "2 Days"
+                  : "5 Days",
+            lastUpdated: new Date()
+              .toISOString()
+              .replace("T", " ")
+              .substring(0, 16),
+            currentStep: newLane === "Green" ? 4 : 3,
+            invoiceValue: parseFloat(newVal) || 120000,
+            dutyRate: newLane === "Green" ? 0 : 10,
+            ppnRate: 11,
+            pphRate: 2.5,
+            sdppiCert:
+              "SNI-" +
+              Math.floor(10000 + Math.random() * 90000) +
+              "/ASTRA/2026",
+            lartasStatus:
+              newLane === "Green" ? "Compliant" : "Regulatory Review Required",
+            documents: [
+              {
+                name: "Generated_Invoice_" + newId + ".pdf",
+                type: "Invoice",
+                status: "Approved",
+                size: "1.5 MB",
+                uploader: "Supply Team",
+              },
+              {
+                name: "Packing_List_" + newId + ".pdf",
+                type: "Packing List",
+                status: "Approved",
+                size: "1.2 MB",
+                uploader: "Supply Team",
+              },
+              {
+                name: "Bill_of_Lading_" + newId + ".pdf",
+                type: "BL/AWB",
+                status: "Approved",
+                size: "2.4 MB",
+                uploader: "Custom Broker",
+              },
+            ],
+            pibData: {
+              hsCode: "8708.29.90",
+              taxCalculated: parseFloat(newVal) * 16400 * 0.2,
+              status:
+                newLane === "Green"
+                  ? "SPPB Issued"
+                  : newLane === "Yellow"
+                    ? "Submitted to CEISA"
+                    : "SPJM Issued (Red Lane)",
+            },
+          };
+
+          setShipments([newRecord, ...shipments]);
+          setSelectedShipment(newRecord);
+          setIsModalOpen(false);
+          setNewPo("");
+          setNewCommodity("");
+          addTerminalLog(
+            `New import declaration record created: ${newId} (PO: ${newPo})`,
+          );
+        };
+
+        const handleSendMessage = async (e) => {
+          e.preventDefault();
+          if (!chatInput.trim()) return;
+
+          const userMsg = { role: "user", text: chatInput };
+          setChatMessages((prev) => [...prev, userMsg]);
+          const question = chatInput;
+          setChatInput("");
+          setIsAiLoading(true);
+
+          try {
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            const systemPrompt = `You are a world-class customs consultant advising PT Astra International Tbk. Answer accurately in professional Indonesian on imports, HS Code assignments (especially automotive and heavy engine parts), SNI regulations, and Laporan Surveyor. Keep responses concise, structured, and strategic.`;
+
+            const response = await fetch(apiUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: question }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+              }),
+            });
+
+            const result = await response.json();
+            const responseText =
+              result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+            if (responseText) {
+              setChatMessages((prev) => [
+                ...prev,
+                { role: "assistant", text: responseText },
+              ]);
+            } else {
+              throw new Error();
+            }
+          } catch (err) {
+            let localResponse =
+              "Mohon maaf, saya belum memahami rincian pertanyaan Anda. Silakan tanyakan mengenai penangguhan SPJM, tarif HS Code suku cadang, atau dokumen LS / SNI Astra.";
+            if (
+              question.toLowerCase().includes("spjm") ||
+              question.toLowerCase().includes("merah")
+            ) {
+              localResponse = `### PANDUAN REMEDIASI JALUR MERAH (SPJM) ASTRA INTERNATIONAL
+1. **Pemeriksaan Fisik Bersama (Behandling):** Koordinasikan PPJK Astra dengan petugas pemeriksa Bea Cukai Tanjung Priok.
+2. **Kesesuaian Dokumen:** Pastikan invoice, packing list, sertifikat SNI dan Laporan Surveyor asli berada di lokasi saat segel kontainer dibuka.
+3. **Penyusunan Surat Penangguhan Denda:** Jika terdapat keterlambatan koordinasi jadwal Behandling, segera draf surat permohonan ke Kepala Kantor Pelayanan Bea Cukai setempat guna meminimalkan penumpukan denda logistik (Demurrage).`;
+            } else if (
+              question.toLowerCase().includes("hs code") ||
+              question.toLowerCase().includes("fortuner") ||
+              question.toLowerCase().includes("ecu")
+            ) {
+              localResponse = `### KETENTUAN HS CODE & PERATURAN IMPOR SUKU CADANG
+1. **HS 8708.29.90 (Suku Cadang Body/CKD Fortuner):** Bea Masuk 10%, PPN 11%, PPh 2.5%. Memerlukan Lartas SNI dan SPI (Surat Persetujuan Impor).
+2. **HS 8708.99.80 (Engine Control Unit):** Bea Masuk 0% jika menggunakan Form D (ATIGA) dari Thailand.
+3. **Pengecekan INSW:** Selalu validasi kesesuaian uraian barang di PIB dengan database INSW guna menghindari Nota Pembetulan (SPTNP).`;
+            } else if (
+              question.toLowerCase().includes("sni") ||
+              question.toLowerCase().includes("lartas") ||
+              question.toLowerCase().includes("ls")
+            ) {
+              localResponse = `### KETENTUAN LS & SERTIFIKASI SNI OTOMOTIF
+1. **Laporan Surveyor (LS):** Wajib diperoleh di pelabuhan muat negara asal (Jepang/Thailand) sebelum pengapalan dilakukan.
+2. **Pencocokan Portal INSW:** Pastikan ID Sertifikat SNI Astra terdaftar dan berstatus aktif di Portal Indonesia Single Window (INSW).
+3. **Pelepasan Jalur Kuning (NPD):** Upload berkas konfirmasi LS yang telah diverifikasi sistem untuk men-sinkronkan portal CEISA Bea Cukai agar status otomatis berubah menjadi SPPB.`;
+            }
+
+            setTimeout(() => {
+              setChatMessages((prev) => [
+                ...prev,
+                { role: "assistant", text: localResponse },
+              ]);
+              setIsAiLoading(false);
+            }, 1000);
+          } finally {
+            setIsAiLoading(false);
+          }
+        };
+
+        const runAiComplianceAudit = async () => {
+          setIsAuditLoading(true);
+          addTerminalLog(
+            `Initiating automated AI compliance scan on ${selectedShipment.id}...`,
+          );
+
+          try {
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            const systemPrompt = `You are the automated INSW AI Compliance Auditor for PT Astra International Tbk. Provide a structured audit analysis in Indonesian.`;
+
+            const userPrompt = `Audit details:
+          - ID: ${selectedShipment.id}
+          - Commodity: ${selectedShipment.commodity}
+          - Country of Origin: ${selectedShipment.origin}
+          - Declared HS Code: ${selectedShipment.pibData.hsCode}
+          - Current lane: ${selectedShipment.lane}
+          - Attached Documents: ${JSON.stringify(selectedShipment.documents)}`;
+
+            const response = await fetch(apiUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: userPrompt }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+              }),
+            });
+
+            const result = await response.json();
+            const generatedText =
+              result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+            if (generatedText) {
+              setComplianceReport(generatedText);
+              addTerminalLog(
+                `AI Audit scan completed successfully for ${selectedShipment.id}.`,
+              );
+            } else {
+              throw new Error();
+            }
+          } catch (err) {
+            const localAuditReport = `### LAPORAN AUDIT COMPLIANCE & KEPATUHAN PORTAL INSW ASTRA
+**Kargo Terpilih:** ${selectedShipment.id} (${selectedShipment.commodity})
+
+**1. SKOR RISIKO KEPAPEANAN (RISK SCORE): ${selectedShipment.lane === "Green" ? "8%" : selectedShipment.lane === "Yellow" ? "45%" : "82%"}**
+* *Faktor Penilai:* Integrasi dokumen Lartas, kesesuaian HS Code (${selectedShipment.pibData.hsCode}), dan negara asal (${selectedShipment.origin}).
+
+**2. VERDIK REGULASI LARTAS (SNI & Laporan Surveyor):**
+* **Status Dokumen:** ${selectedShipment.lane === "Green" ? "LENGKAP / VALID" : selectedShipment.lane === "Yellow" ? "TERTUNDA (PENDING LS MATCH)" : "FISIK DIWAJIBKAN"}
+* Sertifikat terdaftar: \`${selectedShipment.sdppiCert}\`. Untuk komponen bodi CKD dan engine parts, pastikan nomor SNI yang tertera pada marking fisik barang cocok dengan data manifest.
+
+**3. DEFISIENSI DOKUMEN:**
+* ${selectedShipment.lane === "Yellow" ? "Laporan Surveyor belum ter-sinkronisasi dengan database Kementerian Perdagangan di Portal INSW." : selectedShipment.lane === "Red" ? "Dibutuhkan pendampingan Behandling dan pencocokan fisik kargo secara manual." : "Nihil. Semua dokumen pendukung dinyatakan Valid & Approved."}
+
+**4. LANGKAH REMEDIASI TAKTIS:**
+* **Akselerasi Verifikasi:** Kirim berkas Laporan Surveyor ke operator INSW untuk verifikasi manual guna melepas status penangguhan Jalur Kuning.
+* **Jaminan Pengeluaran:** Jika proses audit memakan waktu lebih dari 48 jam, ajukan pengeluaran barang dengan jaminan guna menghindari denda penumpukan kontainer.`;
+
+            setTimeout(() => {
+              setComplianceReport(localAuditReport);
+              addTerminalLog(
+                `AI Audit scan completed successfully for ${selectedShipment.id}.`,
+              );
+              setIsAuditLoading(false);
+            }, 1200);
+          } finally {
+            setIsAuditLoading(false);
+          }
+        };
+
+        const handleTerminalSubmit = (e) => {
+          e.preventDefault();
+          const cmd = terminalInput.trim();
+          if (!cmd) return;
+
+          addTerminalLog(`$ ${cmd}`);
+          setTerminalInput("");
+
+          const lowerCmd = cmd.toLowerCase();
+          if (lowerCmd === "clear" || lowerCmd === "/clear") {
+            setTerminalLogs([]);
+          } else if (lowerCmd === "ping" || lowerCmd === "/ping") {
+            addTerminalLog("Pinging INSW CEISA Gateway... Success (14ms)");
+          } else if (lowerCmd.startsWith("/lane ")) {
+            const targetLane = lowerCmd.replace("/lane ", "").trim();
+            const parsed =
+              targetLane.charAt(0).toUpperCase() + targetLane.slice(1);
+            if (["Green", "Yellow", "Red"].includes(parsed)) {
+              simulateLaneChange(parsed);
+            } else {
+              addTerminalLog(
+                "Error: Invalid lane code. Use: /lane [green|yellow|red]",
+              );
+            }
+          } else if (lowerCmd === "/audit" || lowerCmd === "/audit ") {
+            runAiComplianceAudit();
+          } else if (lowerCmd === "help" || lowerCmd === "/help") {
+            addTerminalLog(
+              "Available Commands: /ping, /clear, /audit, /lane [green|yellow|red]",
+            );
+          } else {
+            addTerminalLog(
+              `Command not found: '${cmd}'. Type /help for available options.`,
+            );
+          }
+        };
+
+        const handleSignIn = (e) => {
+          e.preventDefault();
+          setIsLoggedIn(true);
+          addTerminalLog(
+            "Authorized user signed in successfully. Session started.",
+          );
+        };
+
+        // Filtered Shipments helper
+        const getFilteredShipments = () => {
+          return shipments.filter((s) => {
+            const matchesLane =
+              shipmentsFilter === "All" || s.lane === shipmentsFilter;
+            const matchesSearch =
+              s.commodity
+                .toLowerCase()
+                .includes(shipmentsSearch.toLowerCase()) ||
+              s.id.toLowerCase().includes(shipmentsSearch.toLowerCase()) ||
+              s.poNumber.toLowerCase().includes(shipmentsSearch.toLowerCase());
+            return matchesLane && matchesSearch;
+          });
+        };
+
+        if (!isLoggedIn) {
+          return (
+            <div className="min-h-screen bg-[#f3f4f6] text-slate-900 flex flex-col md:flex-row">
+              {/* LEFT HERO PANEL */}
+              <div className="w-full md:w-1/2 relative bg-slate-900 min-h-[40vh] md:min-h-screen flex items-end p-8 md:p-16">
+                <div
+                  className="absolute inset-0 bg-cover bg-center opacity-75"
+                  style={{ backgroundImage: `url('image_5c5501.jpg')` }}
+                ></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent"></div>
+
+                <div className="relative z-10 space-y-4 max-w-lg">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-white font-extrabold text-2xl tracking-tight">
+                      ASTRA
+                    </span>
+                    <span className="text-white font-light text-sm tracking-widest mt-1">
+                      international
+                    </span>
+                  </div>
+
+                  <h1 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight leading-tight">
+                    Import Process Monitoring System
+                  </h1>
+
+                  <div className="pt-2">
+                    <p className="text-sm font-semibold text-slate-300">
+                      PT. Astra International Tbk
+                    </p>
+                    <p className="text-xs text-slate-400">
+                      Suryapranoto, Jakarta
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* RIGHT SIGN IN FORM PANEL */}
+              <div className="w-full md:w-1/2 flex items-center justify-center p-6 md:p-12 bg-slate-100">
+                <div className="bg-white rounded-3xl p-8 md:p-10 w-full max-w-md shadow-xl border border-slate-200/60 space-y-6">
+                  <div>
+                    <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">
+                      Welcome Back!
+                    </h2>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Sign in to continue your dashboard
+                    </p>
+                  </div>
+
+                  <form onSubmit={handleSignIn} className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                        <i className="fa-solid fa-user text-indigo-600"></i>{" "}
+                        Username
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={loginUsername}
+                        onChange={(e) => setLoginUsername(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 transition-all font-mono"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                        <i className="fa-solid fa-lock text-indigo-600"></i>{" "}
+                        Password
+                      </label>
+                      <input
+                        type="password"
+                        required
+                        value={loginPassword}
+                        onChange={(e) => setLoginPassword(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 transition-all font-mono"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs font-medium text-slate-600">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={rememberMe}
+                          onChange={(e) => setRememberMe(e.target.checked)}
+                          className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        Remember me
+                      </label>
+                      <a href="#" className="text-blue-600 hover:underline">
+                        Forgot password?
+                      </a>
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white py-3.5 rounded-xl text-sm font-bold tracking-wide shadow-lg shadow-blue-600/30 transition-all text-center block"
+                    >
+                      Sign In
+                    </button>
+                  </form>
+
+                  <div className="text-center text-[10px] text-slate-400 pt-4 border-t border-slate-100">
+                    <p>© 2026 PT Astra International Tbk</p>
+                    <p className="mt-0.5">All rights reserved.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        return (
+          <div className="min-h-screen bg-slate-50 text-slate-800 font-sans flex flex-col selection:bg-blue-600/30">
+            {/* ENTERPRISE LOGISTICS HEADER - Light Theme blue accents */}
+            <header className="bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
+              <div className="flex items-center gap-3">
+                <img
+                  src="@astra.logo"
+                  alt="Astra International Logo"
+                  className="h-12 w-12 rounded-xl object-contain shadow-md shadow-blue-500/10"
+                />
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-lg font-black tracking-tight text-slate-900 flex items-center gap-1.5">
+                      Astra International{" "}
+                      <span className="font-light text-slate-500 text-sm">
+                        Import Gateway
+                      </span>
+                    </h1>
+                    <span className="text-[10px] bg-blue-100 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full font-bold">
+                      IMS v3.0
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    Integrated Parts Tracking, SNI Compliance & Lartas Audits
+                    Portal
+                  </p>
+                </div>
+              </div>
+
+              {/* ROLE SIMULATION & LOGOUT BAR - Beautiful Blue controls */}
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-1.5 bg-slate-100 border border-slate-200 rounded-xl p-1">
+                  <span className="text-[11px] text-slate-500 px-2 font-medium">
+                    Logged Role:
+                  </span>
+                  {["Supply Team", "Custom Broker/LSP", "Management"].map(
+                    (role) => (
+                      <button
+                        key={role}
+                        onClick={() => {
+                          setActiveRole(role);
+                          addTerminalLog(`User identity changed to: ${role}`);
+                        }}
+                        className={`text-[11px] px-3 py-1.5 rounded-lg transition-all font-semibold ${
+                          activeRole === role
+                            ? role === "Management"
+                              ? "bg-purple-600 text-white shadow-md shadow-purple-500/10"
+                              : role === "Custom Broker/LSP"
+                                ? "bg-amber-600 text-white shadow-md shadow-amber-500/10"
+                                : "bg-blue-600 text-white shadow-md shadow-blue-500/10"
+                            : "text-slate-600 hover:text-slate-950 hover:bg-white"
+                        }`}
+                      >
+                        {role === "Management"
+                          ? "💼 " + role
+                          : role === "Custom Broker/LSP"
+                            ? "🛠️ " + role
+                            : "📦 " + role}
+                      </button>
+                    ),
+                  )}
+                </div>
+
+                {/* NOTIFICATIONS BELL */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowNotifications(!showNotifications)}
+                    className="bg-white hover:bg-slate-50 text-slate-700 p-2.5 rounded-xl border border-slate-200 transition-all flex items-center justify-center relative shadow-sm"
+                  >
+                    <i className="fa-regular fa-bell text-sm"></i>
+                    {notifications.some((n) => n.unread) && (
+                      <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-ping"></span>
+                    )}
+                  </button>
+                  {showNotifications && (
+                    <div className="absolute right-0 mt-2 w-80 bg-white border border-slate-200 rounded-2xl p-4 shadow-2xl z-50 space-y-3">
+                      <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+                        <span className="text-xs font-bold text-slate-900">
+                          Notifications
+                        </span>
+                        <button
+                          onClick={() =>
+                            setNotifications(
+                              notifications.map((n) => ({
+                                ...n,
+                                unread: false,
+                              })),
+                            )
+                          }
+                          className="text-[10px] text-blue-600 hover:underline"
+                        >
+                          Mark all read
+                        </button>
+                      </div>
+                      <div className="space-y-2 max-h-60 overflow-y-auto">
+                        {notifications.map((n) => (
+                          <div
+                            key={n.id}
+                            className={`p-2.5 rounded-lg text-xs leading-normal ${n.unread ? "bg-slate-100 font-semibold text-slate-900" : "bg-white text-slate-500 border border-slate-100"}`}
+                          >
+                            {n.text}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* USER PROFILE HEADER BADGE */}
+                <div className="flex items-center gap-2 bg-slate-100 border border-slate-200 rounded-xl px-3 py-1.5">
+                  <img
+                    src="astra.png"
+                    alt="Astra Avatar"
+                    className="w-7 h-7 rounded-lg object-cover shadow-md shadow-blue-500/15"
+                  />
+                  <div className="hidden sm:block text-left">
+                    <p className="text-xs font-extrabold text-slate-900 leading-none">
+                      Taufik Hidayat
+                    </p>
+                    <p className="text-[9px] text-slate-500 font-semibold mt-1">
+                      Astra ID: AST-9921
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setIsModalOpen(true)}
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 shadow-lg shadow-blue-500/20 transition-all"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2.5"
+                        d="M12 4v16m8-8H4"
+                      ></path>
+                    </svg>
+                    Buat PIB Baru
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setIsLoggedIn(false);
+                      addTerminalLog("Authorized user logged out.");
+                    }}
+                    className="bg-white hover:bg-slate-100 text-slate-700 p-2.5 rounded-xl text-xs font-bold transition-all border border-slate-200 shadow-sm"
+                    title="Sign Out"
+                  >
+                    <i className="fa-solid fa-right-from-bracket"></i>
+                  </button>
+                </div>
+              </div>
+            </header>
+
+            {/* CORE FRAMEWORK CONTAINER */}
+            <div className="flex-1 flex flex-col md:flex-row">
+              {/* ENTERPRISE NAVIGATION */}
+              <aside className="w-full md:w-64 bg-white border-r border-slate-200 p-4 flex flex-row md:flex-col gap-2 overflow-x-auto md:overflow-visible shrink-0 shadow-sm">
+                {/* USER SIDEBAR CARD */}
+                <div className="hidden md:flex flex-col items-center p-4 bg-slate-50 border border-slate-200 rounded-2xl mb-4 text-center w-full">
+                  <div className="relative">
+                    <img
+                      src="@file:astra.png"
+                      alt="Astra Avatar"
+                      className="w-14 h-14 rounded-2xl object-cover shadow-lg shadow-blue-500/15"
+                    />
+                    <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full animate-pulse"></span>
+                  </div>
+                  <h4 className="text-sm font-extrabold text-slate-900 mt-3">
+                    Taufik Hidayat
+                  </h4>
+                  <p className="text-[10px] text-slate-500 font-semibold mt-0.5">
+                    Senior Logistics Officer
+                  </p>
+                  <p className="text-[9px] text-slate-400 mt-1">
+                    Suryapranoto, Jakarta
+                  </p>
+                </div>
+
+                <div className="hidden md:block px-3 mb-2">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    Main Modules
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setActiveTab("Dashboard")}
+                  className={`w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 transition-all ${
+                    activeTab === "Dashboard"
+                      ? "bg-blue-50 text-blue-700 border-l-4 border-blue-600 shadow-sm"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-950"
+                  }`}
+                >
+                  <svg
+                    className="w-5 h-5 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z"
+                    ></path>
+                  </svg>
+                  <span className="font-bold text-sm">Dashboard Overview</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab("Shipments")}
+                  className={`w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 transition-all ${
+                    activeTab === "Shipments"
+                      ? "bg-blue-50 text-blue-700 border-l-4 border-blue-600 shadow-sm"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-950"
+                  }`}
+                >
+                  <svg
+                    className="w-5 h-5 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                    ></path>
+                  </svg>
+                  <span className="font-bold text-sm">PIB Declarations</span>
+                  <span className="ml-auto bg-slate-200 text-slate-700 px-2.5 py-0.5 rounded-full text-[11px] font-bold border border-slate-300">
+                    {shipments.length}
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab("DocumentVault")}
+                  className={`w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 transition-all ${
+                    activeTab === "DocumentVault"
+                      ? "bg-blue-50 text-blue-700 border-l-4 border-blue-600 shadow-sm"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-950"
+                  }`}
+                >
+                  <svg
+                    className="w-5 h-5 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"
+                    ></path>
+                  </svg>
+                  <span className="font-bold text-sm">Documents & SNI</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab("Analytics")}
+                  className={`w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 transition-all ${
+                    activeTab === "Analytics"
+                      ? "bg-blue-50 text-blue-700 border-l-4 border-blue-600 shadow-sm"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-950"
+                  }`}
+                >
+                  <svg
+                    className="w-5 h-5 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                    ></path>
+                  </svg>
+                  <span className="font-bold text-sm">
+                    Metrics & Performance
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab("AIAdvisor")}
+                  className={`w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 transition-all ${
+                    activeTab === "AIAdvisor"
+                      ? "bg-blue-50 text-blue-700 border-l-4 border-blue-600 shadow-sm"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-950"
+                  }`}
+                >
+                  <svg
+                    className="w-5 h-5 text-blue-600 shrink-0 animate-pulse"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2.5"
+                      d="M13 10V3L4 14h7v7l9-11h-7z"
+                    ></path>
+                  </svg>
+                  <span className="font-bold text-sm text-blue-700">
+                    Gemini Customs AI
+                  </span>
+                </button>
+              </aside>
+
+              {/* WORKSPACE AREA */}
+              <main className="flex-1 p-6 overflow-y-auto space-y-6">
+                {/* TAB 1: DASHBOARD OVERVIEW */}
+                {activeTab === "Dashboard" && (
+                  <div className="space-y-6">
+                    {/* SPECIALIZED PROFILE INSIGHT BANNER */}
+                    <div
+                      className={`p-4 rounded-2xl border ${
+                        activeRole === "Management"
+                          ? "bg-purple-50 border-purple-200"
+                          : activeRole === "Custom Broker/LSP"
+                            ? "bg-amber-50 border-amber-200"
+                            : "bg-blue-50 border-blue-200"
+                      } flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`p-2.5 rounded-xl text-white ${
+                            activeRole === "Management"
+                              ? "bg-purple-600"
+                              : activeRole === "Custom Broker/LSP"
+                                ? "bg-amber-600"
+                                : "bg-blue-600"
+                          }`}
+                        >
+                          {activeRole === "Management"
+                            ? "💼"
+                            : activeRole === "Custom Broker/LSP"
+                              ? "⚙️"
+                              : "📦"}
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-bold text-slate-900">
+                            Astra Workspace:{" "}
+                            <span className="font-extrabold underline">
+                              {activeRole} Portal
+                            </span>
+                          </h3>
+                          <p className="text-xs text-slate-600">
+                            {activeRole === "Management"
+                              ? "Memampilkan metrik finansial, kepatuhan denda pelabuhan, dan modul ringkasan audit strategi global."
+                              : activeRole === "Custom Broker/LSP"
+                                ? "Fokus draf deklarasi PIB, modifikasi HS Code suku cadang, Laporan Surveyor, dan rilis terminal log CEISA."
+                                : "Manajemen Purchase Order otomotif, verifikasi berkas pengapalan Jepang/Thailand, dan pembuatan kargo baru."}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-[10px] bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-slate-500 font-mono shadow-sm">
+                        Aktivitas: Online
+                      </div>
+                    </div>
+
+                    {/* ROLE-BASED DASHBOARD WIDGETS SECTION */}
+                    {/* A. SUPPLY TEAM WORKSPACE */}
+                    {activeRole === "Supply Team" && (
+                      <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-sm">
+                        <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                          <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                            <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                            Logistics Preparation Desk (Astra Supply Team)
+                          </h4>
+                          <span className="text-xs text-slate-500">
+                            Task Checklist
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+                            <h5 className="text-xs font-bold text-blue-600">
+                              1. Upload Draft PIB
+                            </h5>
+                            <p className="text-[11px] text-slate-600 font-medium">
+                              Pastikan invoice, PL, dan BL telah sinkron dari
+                              log pabrik Toyota Motomachi Jepang.
+                            </p>
+                            <button
+                              onClick={() => setIsModalOpen(true)}
+                              className="bg-blue-600 text-white hover:bg-blue-700 px-3 py-1.5 rounded-lg text-xs font-bold w-full transition-all shadow-sm"
+                            >
+                              Unggah Berkas Baru
+                            </button>
+                          </div>
+
+                          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+                            <h5 className="text-xs font-bold text-blue-600">
+                              2. Monitor SNI / LS Match
+                            </h5>
+                            <p className="text-[11px] text-slate-600 font-medium">
+                              Laporan Surveyor (LS) wajib dicocokkan sebelum
+                              deklarasi kontainer masuk Bea Cukai.
+                            </p>
+                            <button
+                              onClick={() => setActiveTab("DocumentVault")}
+                              className="bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 px-3 py-1.5 rounded-lg text-xs font-bold w-full transition-all shadow-sm"
+                            >
+                              Periksa Dokumen SNI
+                            </button>
+                          </div>
+
+                          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+                            <h5 className="text-xs font-bold text-blue-600">
+                              3. AI Compliance Engine
+                            </h5>
+                            <p className="text-[11px] text-slate-600 font-medium">
+                              Gunakan kecerdasan buatan untuk audit hambatan
+                              denda bea masuk sebelum audit fisik lapangan.
+                            </p>
+                            <button
+                              onClick={runAiComplianceAudit}
+                              className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold w-full transition-all flex justify-center items-center gap-1.5 shadow-md shadow-blue-500/10"
+                            >
+                              {isAuditLoading
+                                ? "Mengaudit..."
+                                : "Jalankan Audit AI"}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* B. CUSTOM BROKER & LSP WORKSPACE */}
+                    {activeRole === "Custom Broker/LSP" && (
+                      <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-sm">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-3">
+                          <div>
+                            <h4 className="text-sm font-bold text-amber-600 uppercase tracking-wider flex items-center gap-2">
+                              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping"></span>
+                              CEISA PIB Console (Astra Custom Broker)
+                            </h4>
+                            <p className="text-xs text-slate-500 mt-1">
+                              Klasifikasikan HS Code produk suku cadang Astra,
+                              tetapkan draf PIB, dan jalankan log EDI Bea Cukai.
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                          {/* HS Code Catalog & Selector */}
+                          <div className="lg:col-span-7 bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3 shadow-inner">
+                            <div className="flex justify-between items-center border-b border-slate-200 pb-2">
+                              <span className="text-xs font-bold text-slate-700 uppercase tracking-widest">
+                                HS Code Directory (Astra Components)
+                              </span>
+                              <input
+                                type="text"
+                                placeholder="Cari HS Code / Nama..."
+                                value={hsSearchQuery}
+                                onChange={(e) =>
+                                  setHsSearchQuery(e.target.value)
+                                }
+                                className="bg-white border border-slate-200 rounded-lg text-[11px] px-3 py-1 text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                              />
+                            </div>
+
+                            <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1">
+                              {hsDirectory
+                                .filter(
+                                  (h) =>
+                                    h.hsCode.includes(hsSearchQuery) ||
+                                    h.description
+                                      .toLowerCase()
+                                      .includes(hsSearchQuery.toLowerCase()),
+                                )
+                                .map((h, i) => (
+                                  <div
+                                    key={i}
+                                    className="flex justify-between items-center p-2.5 bg-white hover:bg-slate-50 rounded-lg text-xs transition-all border border-slate-200"
+                                  >
+                                    <div>
+                                      <span className="font-mono font-bold text-blue-600">
+                                        {h.hsCode}
+                                      </span>
+                                      <span className="text-slate-700 block text-[11px] font-medium">
+                                        {h.description}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-[10px] text-slate-500 font-mono">
+                                        BM: {h.duty}%
+                                      </span>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleApplyHsCode(h)}
+                                        className="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 rounded-md text-[11px] font-bold transition-all shadow-sm"
+                                      >
+                                        Apply to PIB
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))}
+                            </div>
+                          </div>
+
+                          {/* Duty Alteration Controls */}
+                          <div className="lg:col-span-5 bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3 flex flex-col justify-between shadow-inner">
+                            <div>
+                              <h5 className="text-xs font-bold text-slate-700 border-b border-slate-200 pb-2 mb-2 uppercase tracking-wider">
+                                PIB Manual Duty Override
+                              </h5>
+                              <div className="space-y-3">
+                                <div className="flex justify-between text-xs">
+                                  <span className="text-slate-500 font-medium">
+                                    Selected Cargo ID:
+                                  </span>
+                                  <span className="font-bold text-slate-800">
+                                    {selectedShipment.id}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between text-xs">
+                                  <span className="text-slate-500 font-medium">
+                                    Active HS Code:
+                                  </span>
+                                  <span className="font-mono font-bold text-blue-600">
+                                    {selectedShipment.pibData.hsCode}
+                                  </span>
+                                </div>
+                                <div>
+                                  <label className="block text-[10px] text-slate-500 font-bold uppercase mb-1">
+                                    Set Customs Duty (%)
+                                  </label>
+                                  <input
+                                    type="number"
+                                    placeholder={selectedShipment.dutyRate}
+                                    value={customDutyOverride}
+                                    onChange={(e) =>
+                                      setCustomDutyOverride(e.target.value)
+                                    }
+                                    className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (customDutyOverride === "") return;
+                                setCalcDuty(parseFloat(customDutyOverride));
+                                const updated = shipments.map((s) => {
+                                  if (s.id === selectedShipment.id) {
+                                    return {
+                                      ...s,
+                                      dutyRate: parseFloat(customDutyOverride),
+                                    };
+                                  }
+                                  return s;
+                                });
+                                setShipments(updated);
+                                addTerminalLog(
+                                  `Manually overrode duty rate for ${selectedShipment.id} to ${customDutyOverride}%`,
+                                );
+                                setCustomDutyOverride("");
+                              }}
+                              className="bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl text-xs font-bold transition-all mt-2 shadow-sm"
+                            >
+                              Apply Duty Override
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* C. SENIOR EXECUTIVE MANAGEMENT WORKSPACE */}
+                    {activeRole === "Management" && (
+                      <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-sm">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-3">
+                          <div>
+                            <h4 className="text-sm font-bold text-purple-600 uppercase tracking-wider flex items-center gap-2">
+                              <span className="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+                              Astra Management Board & Audit Command Center
+                            </h4>
+                            <p className="text-xs text-slate-500 mt-1">
+                              Pantau total biaya pajak impor (PDRI), analisis
+                              resiko finansial logistik, dan jalankan memo AI
+                              Kepabeanan.
+                            </p>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={generateExecutiveAid}
+                            disabled={isExecAiLoading}
+                            className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-md transition-all flex items-center gap-2 shrink-0 self-start"
+                          >
+                            {isExecAiLoading ? (
+                              <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                            ) : (
+                              "🤖"
+                            )}
+                            Generate Executive AI Strategic Digest
+                          </button>
+                        </div>
+
+                        {/* Operational and Cost Scorecard */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 shadow-inner">
+                            <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">
+                              Total Active Capital Risk
+                            </p>
+                            <h5 className="text-xl font-black text-slate-900 mt-1">
+                              $
+                              {shipments
+                                .reduce((acc, s) => acc + s.invoiceValue, 0)
+                                .toLocaleString()}{" "}
+                              USD
+                            </h5>
+                            <span className="text-[9px] text-slate-400 block mt-1">
+                              Mencakup {shipments.length} transaksi berjalan
+                            </span>
+                          </div>
+
+                          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 shadow-inner">
+                            <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">
+                              Total Duties & Tax (PDRI)
+                            </p>
+                            <h5 className="text-xl font-black text-purple-600 mt-1">
+                              Rp{" "}
+                              {shipments
+                                .reduce(
+                                  (acc, s) => acc + s.pibData.taxCalculated,
+                                  0,
+                                )
+                                .toLocaleString("id-ID")}
+                            </h5>
+                            <span className="text-[9px] text-emerald-600 font-bold block mt-1">
+                              SLA Target: {"<"} 24 Jam Rilis
+                            </span>
+                          </div>
+
+                          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 shadow-inner">
+                            <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">
+                              Custom Broker Performance
+                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-xl font-black text-slate-900">
+                                98.2%
+                              </span>
+                              <span className="text-[9px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded font-bold">
+                                Grade A+
+                              </span>
+                            </div>
+                            <span className="text-[9px] text-slate-400 block mt-1">
+                              Average Port Dwelling Time: 1.8 Days
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Executive Digest Report Rendering */}
+                        {executiveDigest && (
+                          <div className="bg-purple-50 border border-purple-200 rounded-xl p-5 space-y-3">
+                            <div className="flex justify-between items-center border-b border-purple-200 pb-2">
+                              <span className="text-[10px] text-purple-600 font-bold tracking-widest uppercase flex items-center gap-1.5">
+                                <span className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-ping"></span>
+                                Astra Strategic Global Trade Memo (Gemini AI
+                                Grounded)
+                              </span>
+                              <button
+                                onClick={() => setExecutiveDigest(null)}
+                                className="text-[10px] text-slate-400 hover:text-slate-600"
+                              >
+                                Close Digest
+                              </button>
+                            </div>
+                            <div className="text-xs text-slate-700 whitespace-pre-wrap leading-relaxed max-h-[220px] overflow-y-auto bg-white p-4 rounded-lg font-mono border border-purple-100 shadow-inner">
+                              {executiveDigest}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* COMPREHENSIVE PERFORMANCE CARD MATRICES */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div className="bg-white border border-slate-200 rounded-2xl p-5 relative overflow-hidden shadow-sm">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="text-xs text-slate-500 font-bold tracking-wider uppercase">
+                              Active Shipments
+                            </p>
+                            <h3 className="text-3xl font-black text-slate-950 mt-1.5">
+                              {shipments.length}
+                            </h3>
+                          </div>
+                          <div className="p-3 bg-blue-50 rounded-xl text-blue-600 border border-blue-100">
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                              ></path>
+                            </svg>
+                          </div>
+                        </div>
+                        <div className="mt-4 flex items-center text-[11px] text-slate-500">
+                          <span className="text-emerald-600 font-bold mr-1">
+                            ↑ 12.4%
+                          </span>{" "}
+                          import value vs last month
+                        </div>
+                      </div>
+
+                      <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="text-xs text-emerald-700 font-bold tracking-wider uppercase">
+                              🟢 Green Lane
+                            </p>
+                            <h3 className="text-3xl font-black text-slate-950 mt-1.5">
+                              {
+                                shipments.filter((s) => s.lane === "Green")
+                                  .length
+                              }
+                            </h3>
+                          </div>
+                          <div className="p-3 bg-emerald-50 rounded-xl text-emerald-600 border border-emerald-100">
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                              ></path>
+                            </svg>
+                          </div>
+                        </div>
+                        <div className="mt-4 text-[11px] text-slate-500">
+                          Average Auto-Release SLA:{" "}
+                          <span className="text-emerald-600 font-bold">
+                            1 Hour
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="text-xs text-amber-700 font-bold tracking-wider uppercase">
+                              🟡 Yellow Lane
+                            </p>
+                            <h3 className="text-3xl font-black text-slate-950 mt-1.5">
+                              {
+                                shipments.filter((s) => s.lane === "Yellow")
+                                  .length
+                              }
+                            </h3>
+                          </div>
+                          <div className="p-3 bg-amber-50 rounded-xl text-amber-600 border border-amber-100">
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                              ></path>
+                            </svg>
+                          </div>
+                        </div>
+                        <div className="mt-4 text-[11px] text-amber-600 font-bold flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span>{" "}
+                          Action required: Lartas & SNI upload
+                        </div>
+                      </div>
+
+                      <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="text-xs text-rose-700 font-bold tracking-wider uppercase">
+                              🔴 Red Lane
+                            </p>
+                            <h3 className="text-3xl font-black text-slate-950 mt-1.5">
+                              {shipments.filter((s) => s.lane === "Red").length}
+                            </h3>
+                          </div>
+                          <div className="p-3 bg-rose-50 rounded-xl text-rose-600 border border-rose-100">
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M20.618 5.984A11.955 11.955 0 0112 2.944a11.952 11.952 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016zM12 9v2m0 4h.01"
+                              ></path>
+                            </svg>
+                          </div>
+                        </div>
+                        <div className="mt-4 text-[11px] text-rose-600 font-bold">
+                          Physical Inspections: SPJM Assigned
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* CORE TRACKER + COLLABORATION PANEL */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                      {/* TIMELINE COMPONENT (COL-8) */}
+                      <div className="lg:col-span-8 bg-white border border-slate-200 rounded-2xl p-6 space-y-6 shadow-sm">
+                        {/* Selected Shipment Headings */}
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-5">
+                          <div>
+                            <div className="flex items-center gap-3">
+                              <span className="text-sm font-black text-blue-600 tracking-widest font-mono text-xs">
+                                {selectedShipment.id}
+                              </span>
+                              <span
+                                className={`text-[10px] px-2.5 py-0.5 rounded-full font-extrabold uppercase tracking-wide border ${
+                                  selectedShipment.lane === "Green"
+                                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                    : selectedShipment.lane === "Yellow"
+                                      ? "bg-amber-50 text-amber-700 border-amber-200"
+                                      : "bg-rose-50 text-rose-700 border-rose-200"
+                                }`}
+                              >
+                                {selectedShipment.lane} Lane Process
+                              </span>
+                            </div>
+                            <h4 className="text-base font-bold text-slate-900 mt-1">
+                              {selectedShipment.commodity}
+                            </h4>
+                            <p className="text-xs text-slate-500 font-medium">
+                              PO Ref: {selectedShipment.poNumber} | Origin:{" "}
+                              {selectedShipment.origin}
+                            </p>
+                          </div>
+
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => setShowPrintModal(true)}
+                              className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm"
+                            >
+                              <i className="fa-solid fa-print"></i> Print PIB
+                              Draft
+                            </button>
+                            <button
+                              onClick={runAiComplianceAudit}
+                              disabled={isAuditLoading}
+                              className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 shadow-md shadow-blue-500/10"
+                            >
+                              {isAuditLoading ? (
+                                <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                              ) : (
+                                <svg
+                                  className="w-3.5 h-3.5"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2.5"
+                                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.952 11.952 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                                  ></path>
+                                </svg>
+                              )}
+                              Audit Compliance AI
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* HIGH-LEVEL INTERACTIVE STEPPER PROGRESSION */}
+                        <div className="relative flex flex-col md:flex-row justify-between gap-6 py-2">
+                          {stepsList.map((step, idx) => {
+                            const isDone = idx < selectedShipment.currentStep;
+                            const isCurrent =
+                              idx === selectedShipment.currentStep;
+                            return (
+                              <div
+                                key={idx}
+                                className="flex-1 flex md:flex-col items-start md:items-center text-left md:text-center relative"
+                              >
+                                {/* Stepper Connector Bar */}
+                                {idx < stepsList.length - 1 && (
+                                  <div
+                                    className={`hidden md:block absolute top-5 left-[55%] w-full h-0.5 ${
+                                      idx < selectedShipment.currentStep
+                                        ? "bg-blue-600"
+                                        : "bg-slate-200"
+                                    }`}
+                                  />
+                                )}
+
+                                {/* Node Icon */}
+                                <div
+                                  className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 transition-all ${
+                                    isDone
+                                      ? "bg-blue-600 text-white shadow-md shadow-blue-500/10"
+                                      : isCurrent
+                                        ? "bg-white text-blue-600 border-2 border-blue-600 shadow-md"
+                                        : "bg-slate-100 text-slate-400 border border-slate-200"
+                                  }`}
+                                >
+                                  {isDone ? (
+                                    <svg
+                                      className="w-5 h-5"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth="2.5"
+                                        d="M5 13l4 4L19 7"
+                                      ></path>
+                                    </svg>
+                                  ) : (
+                                    idx + 1
+                                  )}
+                                </div>
+
+                                {/* Captions */}
+                                <div className="ml-3 md:ml-0 md:mt-3">
+                                  <p
+                                    className={`text-xs font-bold tracking-tight ${isCurrent ? "text-blue-600" : "text-slate-700"}`}
+                                  >
+                                    {step.label}
+                                  </p>
+                                  <p className="text-[10px] text-slate-500 mt-0.5 max-w-[120px] hidden md:block leading-snug">
+                                    {step.desc}
+                                  </p>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* INTERACTIVE COMPLIANCE REPORT PANEL */}
+                        {complianceReport && (
+                          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5 space-y-3 shadow-inner">
+                            <div className="flex justify-between items-center">
+                              <h5 className="text-xs font-bold text-blue-700 uppercase tracking-widest flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                                Gemini Compliance Audit Report Card
+                              </h5>
+                              <button
+                                onClick={() => setComplianceReport(null)}
+                                className="text-slate-500 hover:text-slate-700 text-xs font-bold"
+                              >
+                                Close report
+                              </button>
+                            </div>
+                            <div className="text-xs text-slate-800 whitespace-pre-wrap leading-relaxed prose font-mono max-h-[250px] overflow-y-auto bg-white p-4 rounded-xl border border-blue-100 shadow-sm">
+                              {complianceReport}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* CONTEXTUAL ERROR & WARNINGS CARDS */}
+                        <div className="p-5 rounded-2xl border bg-slate-50 border-slate-200">
+                          {selectedShipment.lane === "Green" && (
+                            <div className="flex gap-4">
+                              <div className="text-emerald-600 shrink-0 bg-emerald-100 p-2.5 rounded-xl h-fit border border-emerald-200">
+                                <svg
+                                  className="w-6 h-6"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                  ></path>
+                                </svg>
+                              </div>
+                              <div>
+                                <h4 className="text-sm font-bold text-emerald-700">
+                                  Persetujuan Pengeluaran Barang (SPPB) Terbit
+                                </h4>
+                                <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                                  Analisis resiko Bea Cukai menyatakan seluruh
+                                  kelayakan Lartas & Klasifikasi HS Code clear.
+                                  Cargo diperbolehkan melintasi gerbang TPS
+                                  pelabuhan menuju gudang Astra.
+                                </p>
+                                <div className="mt-3 flex gap-2">
+                                  <span className="text-[10px] bg-emerald-100 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-md font-bold">
+                                    Doc No: SPPB-90112/BC/2026
+                                  </span>
+                                  <span className="text-[10px] bg-white border border-slate-200 text-slate-500 px-2 py-0.5 rounded-md font-mono">
+                                    Gate Out: Verified
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {selectedShipment.lane === "Yellow" && (
+                            <div className="flex gap-4">
+                              <div className="text-amber-700 shrink-0 bg-amber-100 p-2.5 rounded-xl h-fit border border-amber-200">
+                                <svg
+                                  className="w-6 h-6"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                                  ></path>
+                                </svg>
+                              </div>
+                              <div className="space-y-3 flex-1">
+                                <div>
+                                  <h4 className="text-sm font-bold text-amber-700">
+                                    Nota Permintaan Dokumen (NPD) Terbit
+                                  </h4>
+                                  <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                                    Petugas pemeriksa membutuhkan dokumen
+                                    spesifikasi teknis tambahan / Laporan
+                                    Surveyor untuk memvalidasi suku cadang
+                                    manufaktur otomotif ini.
+                                  </p>
+                                </div>
+                                <div className="bg-white border border-slate-200 p-3 rounded-xl text-xs font-mono shadow-inner text-slate-800">
+                                  <span className="font-bold text-amber-600">
+                                    Alasan Penahanan CEISA:
+                                  </span>{" "}
+                                  {selectedShipment.npdNotes}
+                                </div>
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() =>
+                                      setActiveTab("DocumentVault")
+                                    }
+                                    className="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm"
+                                  >
+                                    Upload Dokumen LS
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setChatInput(
+                                        "Bagaimana cara membuktikan kecocokan Laporan Surveyor pada suku cadang otomotif?",
+                                      );
+                                      setActiveTab("AIAdvisor");
+                                    }}
+                                    className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shadow-sm"
+                                  >
+                                    Tanya AI Caranya
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {selectedShipment.lane === "Red" && (
+                            <div className="flex gap-4">
+                              <div className="text-rose-700 shrink-0 bg-rose-100 p-2.5 rounded-xl h-fit border border-rose-200">
+                                <svg
+                                  className="w-6 h-6"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
+                                  ></path>
+                                </svg>
+                              </div>
+                              <div className="space-y-3 flex-1">
+                                <div>
+                                  <h4 className="text-sm font-bold text-rose-700">
+                                    Jalur Merah - Pemeriksaan Fisik Terbit
+                                    (SPJM)
+                                  </h4>
+                                  <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                                    Sistem CEISA menginstruksikan pemeriksaan
+                                    fisik kargo kontainer 100%. Broker/LSP wajib
+                                    mendampingi pembongkaran segel kontainer
+                                    bersama petugas Bea Cukai di lapangan
+                                    penimbunan TPS.
+                                  </p>
+                                </div>
+                                <div className="bg-white border border-slate-200 p-3 rounded-xl text-xs font-mono shadow-inner text-slate-800">
+                                  <span className="font-bold text-rose-600">
+                                    Pemberitahuan SPJM:
+                                  </span>{" "}
+                                  {selectedShipment.spjmNotes}
+                                </div>
+
+                                {/* NEW INTERACTIVE RESCHEDULER FOR RED LANE */}
+                                <div className="bg-slate-100 p-4 rounded-xl space-y-2 border border-slate-200">
+                                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                                    Reschedule Behandling / Inspection
+                                  </span>
+                                  <div className="flex flex-wrap gap-2">
+                                    <input
+                                      type="date"
+                                      value={customInspectionDate}
+                                      onChange={(e) =>
+                                        setCustomInspectionDate(e.target.value)
+                                      }
+                                      className="bg-white border border-slate-200 text-xs px-2 py-1.5 rounded-lg text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                    />
+                                    <input
+                                      type="time"
+                                      value={customInspectionTime}
+                                      onChange={(e) =>
+                                        setCustomInspectionTime(e.target.value)
+                                      }
+                                      className="bg-white border border-slate-200 text-xs px-2 py-1.5 rounded-lg text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                    />
+                                    <button
+                                      onClick={() => {
+                                        addTerminalLog(
+                                          `Behandling rescheduled for ${selectedShipment.id} to ${customInspectionDate} ${customInspectionTime}`,
+                                        );
+                                        simulateLaneChange("Red");
+                                      }}
+                                      className="bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold px-3 py-1.5 rounded-lg transition-all shadow-sm"
+                                    >
+                                      Apply Schedule
+                                    </button>
+                                  </div>
+                                </div>
+
+                                <div className="flex gap-2">
+                                  <button className="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm">
+                                    Koordinasikan Dengan Lapangan
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* LANE ALTERATION CONTROLS (ONLY FOR SUPPLY OR BROKER ROLE) */}
+                        {(activeRole === "Supply Team" ||
+                          activeRole === "Custom Broker/LSP") && (
+                          <div className="border border-dashed border-slate-300 rounded-2xl p-5 space-y-4">
+                            <div>
+                              <h4 className="text-xs font-bold tracking-widest text-slate-400 uppercase">
+                                Lane Alteration Sandbox
+                              </h4>
+                              <p className="text-[11px] text-slate-500 mt-1">
+                                Ubah jalur status di bawah untuk menyimulasikan
+                                integrasi Bea Cukai (CEISA) secara visual.
+                              </p>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              <button
+                                onClick={() => simulateLaneChange("Green")}
+                                className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+                              >
+                                🟢 Force Green Lane
+                              </button>
+                              <button
+                                onClick={() => simulateLaneChange("Yellow")}
+                                className="bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+                              >
+                                🟡 Force Yellow Lane
+                              </button>
+                              <button
+                                onClick={() => simulateLaneChange("Red")}
+                                className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+                              >
+                                🔴 Force Red Lane
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* SHIPMENT SIDEBAR SELECTOR (COL-4) */}
+                      <div className="lg:col-span-4 flex flex-col gap-6">
+                        {/* SEARCH & QUICK SWITCH */}
+                        <div className="bg-white border border-slate-200 rounded-2xl p-5 flex flex-col h-[350px] shadow-sm">
+                          <div className="mb-3">
+                            <h4 className="text-xs font-bold text-slate-700 tracking-wider uppercase">
+                              Active Shipments Vault
+                            </h4>
+                            <p className="text-[11px] text-slate-500 mt-0.5">
+                              Pilih untuk melacak & mengedit deklarasi impor
+                            </p>
+                          </div>
+
+                          <div className="space-y-2 overflow-y-auto flex-1 pr-1">
+                            {shipments.map((s) => {
+                              const isChosen = selectedShipment.id === s.id;
+                              return (
+                                <div
+                                  key={s.id}
+                                  onClick={() => handleSelectShipment(s.id)}
+                                  className={`p-3.5 rounded-xl border cursor-pointer transition-all ${
+                                    isChosen
+                                      ? "bg-blue-50 border-blue-500 shadow-sm ring-1 ring-blue-500/10"
+                                      : "bg-white border-slate-200 hover:bg-slate-50"
+                                  }`}
+                                >
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-[11px] font-black text-blue-600 tracking-wider font-mono text-xs">
+                                      {s.id}
+                                    </span>
+                                    <span
+                                      className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase ${
+                                        s.lane === "Green"
+                                          ? "bg-emerald-100 text-emerald-700"
+                                          : s.lane === "Yellow"
+                                            ? "bg-amber-100 text-amber-700"
+                                            : "bg-rose-100 text-rose-700"
+                                      }`}
+                                    >
+                                      {s.lane} Lane
+                                    </span>
+                                  </div>
+                                  <h5 className="text-xs font-bold text-slate-900 mt-1.5 truncate">
+                                    {s.commodity}
+                                  </h5>
+                                  <div className="flex justify-between items-center text-[10px] text-slate-500 mt-2 border-t border-slate-100 pt-1.5">
+                                    <span className="font-medium">
+                                      Value: ${s.invoiceValue.toLocaleString()}
+                                    </span>
+                                    <span className="font-medium">
+                                      ETA: {s.estimatedTime}
+                                    </span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* REAL-TIME CEISA TERMINAL STREAM */}
+                        <div className="bg-slate-950 text-emerald-400 border border-slate-800 rounded-2xl p-5 flex flex-col h-[260px] font-mono shadow-lg">
+                          <div className="flex justify-between items-center mb-2 border-b border-slate-850 pb-2">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                              CEISA Terminal Command console
+                            </span>
+                            <button
+                              onClick={() => setTerminalLogs([])}
+                              className="text-[9px] text-slate-500 hover:text-slate-300"
+                            >
+                              Clear
+                            </button>
+                          </div>
+
+                          <div
+                            ref={terminalContainerRef}
+                            className="flex-1 overflow-y-auto text-[10px] space-y-1.5 pr-1 mb-2 leading-normal selection:bg-emerald-950"
+                          >
+                            {terminalLogs.map((log, index) => (
+                              <div key={index}>{log}</div>
+                            ))}
+                          </div>
+
+                          <form
+                            onSubmit={handleTerminalSubmit}
+                            className="flex gap-2"
+                          >
+                            <span className="text-emerald-500 text-xs self-center font-bold">
+                              $
+                            </span>
+                            <input
+                              type="text"
+                              placeholder="Type /help or command..."
+                              value={terminalInput}
+                              onChange={(e) => setTerminalInput(e.target.value)}
+                              className="flex-1 bg-slate-900 border border-slate-800 text-[11px] px-2 py-1.5 text-emerald-400 focus:outline-none focus:border-emerald-600 rounded-lg"
+                            />
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 2: ACTIVE DECLARATIONS / SHIPMENTS */}
+                {activeTab === "Shipments" && (
+                  <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                    {/* WORKABLE SEARCH & LANE FILTER CONTROLS */}
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-100 pb-5 mb-6">
+                      <div>
+                        <h3 className="text-lg font-black text-slate-900">
+                          PIB Declarations List
+                        </h3>
+                        <p className="text-xs text-slate-500">
+                          Pemberitahuan Impor Barang data bank for Indonesia
+                          customs logs.
+                        </p>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-3">
+                        {/* Search input field */}
+                        <input
+                          type="text"
+                          placeholder="Search Commodity/PO..."
+                          value={shipmentsSearch}
+                          onChange={(e) => setShipmentsSearch(e.target.value)}
+                          className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono w-48 shadow-sm"
+                        />
+
+                        {/* Working lane filter buttons */}
+                        <div className="flex items-center gap-1.5 bg-slate-100 p-1 border border-slate-200 rounded-xl">
+                          <span className="text-[10px] text-slate-500 px-2 font-bold uppercase">
+                            Filter:
+                          </span>
+                          {["All", "Green", "Yellow", "Red"].map((laneVal) => (
+                            <button
+                              key={laneVal}
+                              onClick={() => setShipmentsFilter(laneVal)}
+                              className={`text-[10px] px-2.5 py-1.5 rounded-lg font-bold transition-all ${
+                                shipmentsFilter === laneVal
+                                  ? "bg-white text-blue-600 shadow-sm"
+                                  : "text-slate-500 hover:text-slate-900"
+                              }`}
+                            >
+                              {laneVal}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* HIGH-FIDELITY RESPONSIVE TABLE */}
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="border-b border-slate-200 text-slate-400 text-xs font-bold uppercase tracking-wider">
+                            <th className="py-4 px-4">Transaction / PO</th>
+                            <th className="py-4 px-4">Commodity / HS Code</th>
+                            <th className="py-4 px-4">U.S. Dollar Value</th>
+                            <th className="py-4 px-4">Tax Calculated</th>
+                            <th className="py-4 px-4">SNI / Permit Status</th>
+                            <th className="py-4 px-4">Customs Status</th>
+                            <th className="py-4 px-4 text-right">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 text-sm">
+                          {getFilteredShipments().map((s) => (
+                            <tr
+                              key={s.id}
+                              className="hover:bg-slate-50 transition-all"
+                            >
+                              <td className="py-4 px-4">
+                                <span className="text-blue-600 font-bold block font-mono text-xs">
+                                  {s.id}
+                                </span>
+                                <span className="text-slate-400 text-[10px] block mt-0.5">
+                                  {s.poNumber}
+                                </span>
+                              </td>
+                              <td className="py-4 px-4">
+                                <span className="font-bold text-slate-900 block truncate max-w-[200px]">
+                                  {s.commodity}
+                                </span>
+                                <span className="text-slate-400 text-[10px] block mt-0.5 font-mono">
+                                  HS: {s.pibData.hsCode}
+                                </span>
+                              </td>
+                              <td className="py-4 px-4 font-bold text-slate-700">
+                                ${s.invoiceValue.toLocaleString()}
+                              </td>
+                              <td className="py-4 px-4 font-bold text-emerald-600 font-mono text-xs">
+                                Rp{" "}
+                                {Math.round(
+                                  s.pibData.taxCalculated,
+                                ).toLocaleString("id-ID")}
+                              </td>
+                              <td className="py-4 px-4">
+                                <span className="text-xs text-slate-700 block font-semibold">
+                                  {s.sdppiCert}
+                                </span>
+                                <span className="text-slate-400 text-[10px] block mt-0.5 font-medium">
+                                  {s.lartasStatus}
+                                </span>
+                              </td>
+                              <td className="py-4 px-4">
+                                <span
+                                  className={`inline-flex items-center gap-1.5 text-[9px] px-2.5 py-1 rounded-full font-extrabold uppercase border ${
+                                    s.lane === "Green"
+                                      ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+                                      : s.lane === "Yellow"
+                                        ? "bg-amber-100 text-amber-700 border-amber-200"
+                                        : "bg-rose-100 text-rose-700 border-rose-200"
+                                  }`}
+                                >
+                                  <span
+                                    className={`w-1.5 h-1.5 rounded-full ${s.lane === "Green" ? "bg-emerald-500" : s.lane === "Yellow" ? "bg-amber-500" : "bg-rose-500"}`}
+                                  />
+                                  {s.lane} Lane
+                                </span>
+                              </td>
+                              <td className="py-4 px-4 text-right">
+                                <button
+                                  onClick={() => {
+                                    setSelectedShipment(s);
+                                    setActiveTab("Dashboard");
+                                  }}
+                                  className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm"
+                                >
+                                  Track Gateway
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 3: DOCUMENT VAULT & VERIFICATIONS */}
+                {activeTab === "DocumentVault" && (
+                  <div className="space-y-6">
+                    <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-100 pb-5 mb-6">
+                        <div>
+                          <h3 className="text-lg font-black text-slate-900">
+                            Centralized Document & SNI Vault
+                          </h3>
+                          <p className="text-xs text-slate-500 font-medium">
+                            Verifikasi kelengkapan berkas kepabeanan untuk:{" "}
+                            <strong className="text-blue-600">
+                              {selectedShipment.id}
+                            </strong>
+                          </p>
+                        </div>
+
+                        <div className="flex items-center gap-2 bg-slate-50 p-2 border border-slate-200 rounded-xl shadow-sm">
+                          <span className="text-[10px] text-slate-500 font-bold uppercase">
+                            Ubah Fokus:
+                          </span>
+                          <select
+                            value={selectedShipment.id}
+                            onChange={(e) =>
+                              handleSelectShipment(e.target.value)
+                            }
+                            className="bg-white border border-slate-200 rounded-lg text-xs text-slate-900 px-3 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500 font-bold"
+                          >
+                            {shipments.map((s) => (
+                              <option key={s.id} value={s.id}>
+                                {s.id} ({s.poNumber})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* TWO COLUMN INTERACTION PANEL */}
+                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        {/* Documents Checklist (COL-8) */}
+                        <div className="lg:col-span-8 space-y-4">
+                          <h4 className="text-sm font-bold text-slate-700">
+                            Berkas Wajib Impor & SNI Astra
+                          </h4>
+
+                          <div className="space-y-3">
+                            {selectedShipment.documents.map((doc, idx) => (
+                              <div
+                                key={idx}
+                                className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                              >
+                                <div className="flex items-start gap-3">
+                                  <div className="p-2.5 bg-white rounded-xl text-slate-400 border border-slate-200 shadow-sm">
+                                    <i className="fa-solid fa-file-pdf text-blue-600 text-lg"></i>
+                                  </div>
+                                  <div>
+                                    <p className="text-xs font-extrabold text-slate-900">
+                                      {doc.name}
+                                    </p>
+                                    <p className="text-[10px] text-slate-400 mt-0.5 font-medium">
+                                      Size: {doc.size} | Uploaded by:{" "}
+                                      {doc.uploader} | Type: {doc.type}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-3">
+                                  <span
+                                    className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold border ${
+                                      doc.status === "Approved"
+                                        ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+                                        : "bg-amber-100 text-amber-700 border-amber-200"
+                                    }`}
+                                  >
+                                    {doc.status}
+                                  </span>
+
+                                  {doc.status !== "Approved" &&
+                                    (activeRole === "Supply Team" ||
+                                      activeRole === "Custom Broker/LSP") && (
+                                      <button
+                                        onClick={() =>
+                                          updateDocumentStatus(
+                                            doc.name,
+                                            "Approved",
+                                          )
+                                        }
+                                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-[11px] font-bold transition-all shadow-sm"
+                                      >
+                                        Loloskan Verifikasi
+                                      </button>
+                                    )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Working File Dropper simulator */}
+                          <div
+                            onClick={handleSimulatedFileUpload}
+                            className="border-2 border-dashed border-slate-300 rounded-2xl p-8 text-center hover:border-blue-500 hover:bg-blue-50/50 transition-all cursor-pointer bg-slate-50"
+                          >
+                            <i className="fa-solid fa-cloud-arrow-up text-2xl text-blue-600 mx-auto mb-2"></i>
+                            <h5 className="text-xs font-bold text-slate-900">
+                              Upload New Compliance Attachment (Invoice/LS/SNI)
+                            </h5>
+                            <p className="text-[10px] text-slate-400 mt-1 max-w-sm mx-auto font-medium">
+                              Click here to automatically attach a verified
+                              document to the current shipment.
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Dynamic Duty Tax Calculator */}
+                        <div className="lg:col-span-4 bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-4 shadow-inner">
+                          <h4 className="text-xs font-bold text-slate-700 tracking-widest uppercase border-b border-slate-200 pb-2">
+                            Draft PIB Calculator
+                          </h4>
+
+                          <div className="space-y-3">
+                            <div>
+                              <label className="block text-[10px] text-slate-500 font-bold uppercase mb-1">
+                                Exchange Rate (USD to IDR)
+                              </label>
+                              <input
+                                type="number"
+                                value={exchangeRate}
+                                onChange={(e) =>
+                                  setExchangeRate(
+                                    parseInt(e.target.value) || 16000,
+                                  )
+                                }
+                                className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500 shadow-sm"
+                              />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <label className="block text-[10px] text-slate-500 font-bold uppercase mb-1">
+                                  Invoice (USD)
+                                </label>
+                                <input
+                                  type="number"
+                                  value={calcInvoice}
+                                  onChange={(e) =>
+                                    setCalcInvoice(
+                                      parseFloat(e.target.value) || 0,
+                                    )
+                                  }
+                                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500 shadow-sm"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[10px] text-slate-500 font-bold uppercase mb-1">
+                                  Duty rate (%)
+                                </label>
+                                <input
+                                  type="number"
+                                  value={calcDuty}
+                                  onChange={(e) =>
+                                    setCalcDuty(parseFloat(e.target.value) || 0)
+                                  }
+                                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500 shadow-sm"
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          <hr className="border-slate-200" />
+
+                          {/* Breakdown output */}
+                          <div className="space-y-2 text-xs font-mono text-slate-700">
+                            <div className="flex justify-between">
+                              <span className="text-slate-500 font-medium">
+                                Value CIF (IDR):
+                              </span>
+                              <span className="text-slate-900 font-bold">
+                                {(calcInvoice * exchangeRate).toLocaleString(
+                                  "id-ID",
+                                )}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-slate-500 font-medium">
+                                Bea Masuk (Duty):
+                              </span>
+                              <span className="text-slate-900 font-bold">
+                                {currentTaxCalculations.duty}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-slate-500 font-medium">
+                                PPN (11%):
+                              </span>
+                              <span className="text-slate-900 font-bold">
+                                {currentTaxCalculations.ppn}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-slate-500 font-medium">
+                                PPh (2.5% API):
+                              </span>
+                              <span className="text-slate-900 font-bold">
+                                {currentTaxCalculations.pph}
+                              </span>
+                            </div>
+                            <hr className="border-slate-200" />
+                            <div className="flex justify-between text-blue-600 font-bold text-sm">
+                              <span>Total PDRI:</span>
+                              <span>{currentTaxCalculations.total}</span>
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={() => {
+                              const updated = shipments.map((s) => {
+                                if (s.id === selectedShipment.id) {
+                                  return {
+                                    ...s,
+                                    invoiceValue: calcInvoice,
+                                    dutyRate: calcDuty,
+                                    pibData: {
+                                      ...s.pibData,
+                                      taxCalculated:
+                                        currentTaxCalculations.totalRaw,
+                                    },
+                                  };
+                                }
+                                return s;
+                              });
+                              setShipments(updated);
+                              addTerminalLog(
+                                `Manually recalculated tax base parameters applied for ${selectedShipment.id}`,
+                              );
+                            }}
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-xs font-bold transition-all mt-4 shadow-sm"
+                          >
+                            Update PIB Draft Tax Data
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 4: METRICS & ANALYTICS CHANNELS */}
+                {activeTab === "Analytics" && (
+                  <div className="space-y-6">
+                    <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                      <div>
+                        <h3 className="text-lg font-black text-slate-900">
+                          Import Operations & SLA Dashboard
+                        </h3>
+                        <p className="text-xs text-slate-500">
+                          Metrik performa pemrosesan jalur logistik Astra
+                          International selama semester berjalan 2026.
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                        {/* AVERAGE CLEARANCE BY LANE SVG CHART */}
+                        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-4">
+                          <div>
+                            <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                              Average Clear Time SLA
+                            </h4>
+                            <p className="text-[10px] text-slate-400 mt-0.5">
+                              Rata-rata waktu rilis barang kontainer pelabuhan.
+                            </p>
+                          </div>
+
+                          <div className="h-44 flex items-end justify-around pb-2 border-b border-slate-200 pt-4">
+                            <div className="flex flex-col items-center gap-2">
+                              <span className="text-[10px] text-emerald-600 font-bold">
+                                1.0 Hrs
+                              </span>
+                              <div className="w-10 bg-emerald-500 rounded-t-lg h-6 transition-all" />
+                              <span className="text-[9px] text-slate-400">
+                                Green
+                              </span>
+                            </div>
+                            <div className="flex flex-col items-center gap-2">
+                              <span className="text-[10px] text-amber-600 font-bold">
+                                1.8 Days
+                              </span>
+                              <div className="w-10 bg-amber-500 rounded-t-lg h-20 transition-all" />
+                              <span className="text-[9px] text-slate-400">
+                                Yellow
+                              </span>
+                            </div>
+                            <div className="flex flex-col items-center gap-2">
+                              <span className="text-[10px] text-rose-600 font-bold">
+                                4.2 Days
+                              </span>
+                              <div className="w-10 bg-rose-500 rounded-t-lg h-32 transition-all" />
+                              <span className="text-[9px] text-slate-400">
+                                Red
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* TRANSACTION DISTRIBUTION SVG PIE/BAR */}
+                        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-4">
+                          <div>
+                            <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                              Lanes Allocation Split
+                            </h4>
+                            <p className="text-[10px] text-slate-400 mt-0.5">
+                              Rasio sebaran jalur kepabeanan saat ini.
+                            </p>
+                          </div>
+
+                          <div className="h-44 flex items-center justify-center relative">
+                            <svg
+                              width="120"
+                              height="120"
+                              viewBox="0 0 40 40"
+                              className="transform -rotate-90"
+                            >
+                              <circle
+                                cx="20"
+                                cy="20"
+                                r="15.915"
+                                fill="transparent"
+                                stroke="#10b981"
+                                strokeWidth="4"
+                                strokeDasharray="65 35"
+                                strokeDashoffset="0"
+                              ></circle>
+                              <circle
+                                cx="20"
+                                cy="20"
+                                r="15.915"
+                                fill="transparent"
+                                stroke="#f59e0b"
+                                strokeWidth="4"
+                                strokeDasharray="20 80"
+                                strokeDashoffset="-65"
+                              ></circle>
+                              <circle
+                                cx="20"
+                                cy="20"
+                                r="15.915"
+                                fill="transparent"
+                                stroke="#f43f5e"
+                                strokeWidth="4"
+                                strokeDasharray="15 85"
+                                strokeDashoffset="-85"
+                              ></circle>
+                            </svg>
+
+                            <div className="absolute right-0 flex flex-col gap-1.5 text-[9px] text-slate-500 font-bold">
+                              <div className="flex items-center gap-1.5">
+                                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>{" "}
+                                Green (65%)
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <span className="w-2 h-2 rounded-full bg-amber-500"></span>{" "}
+                                Yellow (20%)
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <span className="w-2 h-2 rounded-full bg-rose-500"></span>{" "}
+                                Red (15%)
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* MONTHLY DUTY REVENUE GRAPH */}
+                        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-4">
+                          <div>
+                            <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                              Import Duty Expenditures
+                            </h4>
+                            <p className="text-[10px] text-slate-400 mt-0.5">
+                              Pengeluaran Pajak Impor dalam milyaran Rupiah.
+                            </p>
+                          </div>
+
+                          <div className="h-44 flex items-end justify-between pt-4">
+                            <svg
+                              className="w-full h-full"
+                              viewBox="0 0 100 40"
+                              preserveAspectRatio="none"
+                            >
+                              <defs>
+                                <linearGradient
+                                  id="chartGrad"
+                                  x1="0"
+                                  y1="0"
+                                  x2="0"
+                                  y2="1"
+                                >
+                                  <stop
+                                    offset="0%"
+                                    stopColor="#2563eb"
+                                    stopOpacity="0.4"
+                                  />
+                                  <stop
+                                    offset="100%"
+                                    stopColor="#2563eb"
+                                    stopOpacity="0"
+                                  />
+                                </linearGradient>
+                              </defs>
+                              <path
+                                d="M 0 35 Q 25 15 50 25 T 100 5 L 100 40 L 0 40 Z"
+                                fill="url(#chartGrad)"
+                              />
+                              <path
+                                d="M 0 35 Q 25 15 50 25 T 100 5"
+                                fill="none"
+                                stroke="#3b82f6"
+                                strokeWidth="2"
+                              />
+                            </svg>
+                          </div>
+                          <div className="flex justify-between text-[8px] text-slate-400 font-mono">
+                            <span>Jan</span>
+                            <span>Mar</span>
+                            <span>May</span>
+                            <span>Jul (Est)</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 5: GEMINI CUSTOMS & REGULATION AI ADVISOR */}
+                {activeTab === "AIAdvisor" && (
+                  <div className="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col h-[650px] shadow-sm">
+                    <div className="border-b border-slate-100 pb-4 mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                      <div>
+                        <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">
+                          <span className="p-1.5 bg-blue-600 text-white rounded-xl">
+                            <i className="fa-solid fa-brain text-sm"></i>
+                          </span>
+                          INSW & Lartas Regulatory AI Consultant
+                        </h3>
+                        <p className="text-xs text-slate-500">
+                          Ajukan pertanyaan seputar HS Code, Laporan Surveyor
+                          (LS), dokumen SNI, dan kepabeanan Bea Cukai Indonesia.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Chat messaging screen */}
+                    <div className="flex-1 overflow-y-auto space-y-4 p-5 rounded-2xl bg-slate-50 border border-slate-100 mb-4 shadow-inner">
+                      {chatMessages.map((msg, idx) => (
+                        <div
+                          key={idx}
+                          className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                        >
+                          <div
+                            className={`max-w-[80%] rounded-2xl px-4 py-3 text-xs leading-relaxed ${
+                              msg.role === "user"
+                                ? "bg-blue-600 text-white rounded-tr-none shadow-md shadow-blue-500/10"
+                                : "bg-white text-slate-800 rounded-tl-none border border-slate-200 shadow-sm"
+                            }`}
+                          >
+                            <p className="whitespace-pre-line font-medium">
+                              {msg.text}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+
+                      {isAiLoading && (
+                        <div className="flex justify-start">
+                          <div className="bg-white text-slate-600 rounded-2xl rounded-tl-none px-4 py-3 text-xs border border-slate-200 flex items-center gap-2 shadow-sm">
+                            <div
+                              className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce"
+                              style={{ animationDelay: "0ms" }}
+                            />
+                            <div
+                              className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce"
+                              style={{ animationDelay: "150ms" }}
+                            />
+                            <div
+                              className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce"
+                              style={{ animationDelay: "300ms" }}
+                            />
+                            <span className="text-[11px] text-slate-400 font-mono">
+                              Gemini formulating response...
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Enter message block */}
+                    <form onSubmit={handleSendMessage} className="flex gap-2">
+                      <input
+                        type="text"
+                        value={chatInput}
+                        onChange={(e) => setChatInput(e.target.value)}
+                        placeholder="Ketik pertanyaan regulasi (cth: Bagaimana urus Lartas SNI & LS Astra)..."
+                        className="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                      <button
+                        type="submit"
+                        disabled={isAiLoading}
+                        className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-6 rounded-xl text-xs font-bold transition-all flex items-center justify-center shrink-0"
+                      >
+                        Kirim
+                      </button>
+                    </form>
+
+                    {/* Fast Regulatory FAQ Prompts */}
+                    <div className="mt-3.5 flex flex-wrap items-center gap-2">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase">
+                        Quick Suggestions:
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setChatInput(
+                            "Format permohonan surat penjadwalan Behandling Jalur Merah (SPJM)?",
+                          )
+                        }
+                        className="text-[10px] bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg px-2.5 py-1 text-slate-600"
+                      >
+                        📄 Penundaan SPJM
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setChatInput(
+                            "HS Code dan aturan impor Lartas untuk CKD Toyota Fortuner?",
+                          )
+                        }
+                        className="text-[10px] bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg px-2.5 py-1 text-slate-600"
+                      >
+                        📡 HS Code Fortuner
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </main>
+            </div>
+
+            {/* NEW PIB DIALOGUE MODAL */}
+            {isModalOpen && (
+              <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+                <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
+                  <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+                    <div>
+                      <h3 className="font-bold text-slate-900 text-base">
+                        Buat Pengajuan Impor Baru (PIB)
+                      </h3>
+                      <p className="text-[10px] text-slate-400 mt-0.5">
+                        Sistem memetakan parameter secara otomatis ke gateway
+                        Bea Cukai.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setIsModalOpen(false)}
+                      className="text-slate-400 hover:text-slate-900 transition-all"
+                    >
+                      <i className="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                  </div>
+
+                  <form
+                    onSubmit={handleCreateShipment}
+                    className="p-6 space-y-4"
+                  >
+                    <div>
+                      <label className="block text-[10px] text-slate-500 font-bold uppercase mb-1">
+                        Nomor PO (Purchase Order)
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Contoh: PO-ASTRA-7789"
+                        value={newPo}
+                        onChange={(e) => setNewPo(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] text-slate-500 font-bold uppercase mb-1">
+                        Nama Suku Cadang / Komoditas
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Contoh: Cylinders, Gearbox, CKD parts"
+                        value={newCommodity}
+                        onChange={(e) => setNewCommodity(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[10px] text-slate-500 font-bold uppercase mb-1">
+                          Invoice Value (USD)
+                        </label>
+                        <input
+                          type="number"
+                          required
+                          placeholder="Value in USD"
+                          value={newVal}
+                          onChange={(e) => setNewVal(e.target.value)}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-slate-500 font-bold uppercase mb-1">
+                          Negara Asal (Origin)
+                        </label>
+                        <select
+                          value={newOrigin}
+                          onChange={(e) => setNewOrigin(e.target.value)}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        >
+                          <option value="Japan (Toyota Motomachi Plant)">
+                            Japan
+                          </option>
+                          <option value="Thailand (Toyota Samrong Plant)">
+                            Thailand
+                          </option>
+                          <option value="Germany">Germany</option>
+                          <option value="USA">USA</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] text-slate-500 font-bold uppercase mb-1">
+                        Simulasi Jalur Awal
+                      </label>
+                      <select
+                        value={newLane}
+                        onChange={(e) => setNewLane(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      >
+                        <option value="Green">
+                          Green Lane (Auto-Approved SPPB)
+                        </option>
+                        <option value="Yellow">
+                          Yellow Lane (Awaiting Lartas Verification)
+                        </option>
+                        <option value="Red">
+                          Red Lane (Physical Inspection SPJM)
+                        </option>
+                      </select>
+                    </div>
+
+                    <div className="pt-4 border-t border-slate-100 flex justify-end gap-2.5">
+                      <button
+                        type="button"
+                        onClick={() => setIsModalOpen(false)}
+                        className="bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm"
+                      >
+                        Batal
+                      </button>
+                      <button
+                        type="submit"
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl text-xs font-bold transition-all shadow-sm"
+                      >
+                        Simpan Transaksi Impor
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+
+            {/* MOCK PRINT / EXPORT MODAL DISPLAY */}
+            {showPrintModal && (
+              <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+                <div className="bg-white text-slate-900 border border-slate-200 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl p-8 space-y-6">
+                  <div className="flex justify-between items-start border-b border-slate-100 pb-4">
+                    <div>
+                      <h3 className="font-extrabold text-xl text-slate-900">
+                        PEMBERITAHUAN IMPOR BARANG (PIB)
+                      </h3>
+                      <span className="text-xs text-slate-500 font-mono">
+                        AST-PIB-DRAFT-{selectedShipment.id}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => setShowPrintModal(false)}
+                      className="text-slate-400 hover:text-slate-950 transition-all font-bold text-lg"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 text-xs">
+                    <div>
+                      <span className="text-slate-400 font-bold uppercase text-[9px] block">
+                        Importir
+                      </span>
+                      <strong className="text-slate-800 text-sm">
+                        PT. Astra International Tbk
+                      </strong>
+                      <span className="text-slate-500 block font-medium">
+                        Suryapranoto, JKT Indonesia
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 font-bold uppercase text-[9px] block">
+                        Pemasok (Supplier)
+                      </span>
+                      <strong className="text-slate-800 text-sm">
+                        {selectedShipment.origin}
+                      </strong>
+                    </div>
+                  </div>
+
+                  <hr className="border-slate-100" />
+
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-slate-500 font-medium">
+                        Komoditas:
+                      </span>
+                      <strong className="text-slate-800">
+                        {selectedShipment.commodity}
+                      </strong>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500 font-medium">
+                        Nilai Transaksi (FOB):
+                      </span>
+                      <strong className="text-slate-800">
+                        ${selectedShipment.invoiceValue.toLocaleString()} USD
+                      </strong>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500 font-medium">
+                        Klasifikasi HS Code:
+                      </span>
+                      <strong className="text-slate-800 font-mono text-blue-600">
+                        {selectedShipment.pibData.hsCode}
+                      </strong>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500 font-medium">
+                        Jalur Pemeriksaan:
+                      </span>
+                      <strong
+                        className={`font-mono ${selectedShipment.lane === "Green" ? "text-emerald-600" : selectedShipment.lane === "Yellow" ? "text-amber-500" : "text-red-500"}`}
+                      >
+                        {selectedShipment.lane} Lane
+                      </strong>
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-50 p-4 rounded-xl space-y-2 text-xs border border-slate-200">
+                    <span className="font-bold text-slate-700 block">
+                      Kalkulasi Pajak Impor Terkait (PDRI):
+                    </span>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500 font-medium">
+                        Total Bea Masuk & Pajak:
+                      </span>
+                      <strong className="text-slate-900 text-base font-mono">
+                        Rp{" "}
+                        {Math.round(
+                          selectedShipment.pibData.taxCalculated,
+                        ).toLocaleString("id-ID")}
+                      </strong>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-2 text-xs pt-4 border-t border-slate-100">
+                    <button
+                      onClick={() => {
+                        window.print();
+                      }}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-md shadow-blue-500/10"
+                    >
+                      Print PIB Document
+                    </button>
+                    <button
+                      onClick={() => setShowPrintModal(false)}
+                      className="bg-slate-100 text-slate-700 px-4 py-2 rounded-xl font-bold hover:bg-slate-200 transition-all shadow-sm"
+                    >
+                      Tutup
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* FOOTER METRICS */}
+            <footer className="bg-white border-t border-slate-200 px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-3 text-xs text-slate-400 mt-auto">
+              <p className="font-medium">
+                © 2026 PT Astra International Tbk - Logistics & Global Trade
+                Division.
+              </p>
+              <p className="text-[10px] font-semibold">
+                INSW Sandbox Connected | CEISA EDI Gateway Active
+              </p>
+            </footer>
+          </div>
+        );
+      }
+
+      const container = document.getElementById("root");
+      const root = ReactDOM.createRoot(container);
+      root.render(<App />);
+    </script>
+  </body>
+</html>
